@@ -586,7 +586,7 @@
     const top = el('div', 'fts-top');
     const tl = el('div');
     tl.append(el('h2', 'fts-title', 'FLEET TO SELL'));
-    const sub = el('p', 'fts-sub', 'Viaturas por vender, da folha "dashboard" do ficheiro master, com a localização e a situação do WheelSys. Viaturas em defleet não aparecem.');
+    const sub = el('p', 'fts-sub', 'Viaturas por vender, da folha "dashboard" do ficheiro master, com a localização e a situação do WheelSys. Não aparecem viaturas em defleet nem em Buy-back (rent back).');
     tl.append(sub);
     const acts = el('div', 'fts-actions');
     const clear = el('button', 'fts-clear', 'Limpar filtros'); clear.type = 'button';
@@ -1190,7 +1190,7 @@
       seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.loc === loc)));
       if (tab === 'fleet') {
         const f = dash.data('frota');
-        if (f.status === 'ok' && f.data !== ftsData) { ftsData = f.data; fts.setRows(f.data); }
+        if (f.status === 'ok' && f.data !== ftsData) { ftsData = f.data; fts.setRows(f.data.filter((r) => String(r.Ownership || '').toLowerCase() !== 'buy-back')); }
         return;
       }
       if (tab === 'vender') { drawVender(); return; }
