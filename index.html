@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Frota ICONIQ PT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Source+Sans+3:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+  :root {
+    --font-anthropic-sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-anthropic-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --color-bg: #f7f7f5; --color-panel: #ffffff; --color-fg: #1d2127; --color-fg-muted: #5f6672;
+    --color-border-line: #e2e3e6; --color-ok: #1f7a4d; --color-warn: #9a6200; --color-bad: #b42318;
+    --cds-chart-grid: #eceef1; --cds-chart-axis: #c8ccd2; --cds-chart-muted: #c9ced6; --cds-chart-reference: #8a919c;
+    --cds-surface-popover: #ffffff; --cds-border: #d9dce1; --cds-shadow-popover: 0 6px 20px rgba(20,24,31,.12); --cds-text-secondary: #5f6672;
+    --c1: #2f5d9e; --c2: #3f9b7f; --c3: #c58a2b; --c4: #b0476a;
+    --cds-font-size-caption: .8125rem; --cds-font-size-body: .9375rem; --cds-font-size-heading: 1.0625rem; --cds-font-size-title: 1.75rem;
+    --cds-font-weight-medium: 600; --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 14px; --cds-gap-lg: 24px; --cds-gap-xl: 36px;
+    --cds-pad-xs: 4px; --cds-pad-sm: 8px; --cds-pad-md: 12px; --cds-pad-lg: 18px; --cds-pad-xl: 28px; --cds-radius: 10px; --cds-dur-slow: .3s;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --color-bg: #121418; --color-panel: #1a1d22; --color-fg: #e8eaed; --color-fg-muted: #9aa1ad; --color-border-line: #2c3038;
+    --color-ok: #5cc28f; --color-warn: #e0a84a; --color-bad: #f07167;
+    --cds-chart-grid: #262a31; --cds-chart-axis: #3a3f48; --cds-chart-muted: #444a55; --cds-chart-reference: #7d8592;
+    --cds-surface-popover: #22262c; --cds-border: #353a43; --cds-shadow-popover: 0 6px 20px rgba(0,0,0,.45); --cds-text-secondary: #9aa1ad;
+    --c1: #6f9be0; --c2: #5cc2a2; --c3: #e0a84a; --c4: #e07a9a; color-scheme: dark; } }
+  html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); }
+  #dash-root { padding: max(20px, env(safe-area-inset-top)) max(var(--dash-gutter, 16px), env(safe-area-inset-right)) 40px max(var(--dash-gutter, 16px), env(safe-area-inset-left)); }
+  .dash-skeleton { color: transparent !important; background: var(--cds-chart-grid); border-radius: 6px; }
+  .fx-src { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; }
+</style>
+<script>
+/* Minimal stand-in for the dashboard runtime: loads data/frota_iconiq.json, runs the calcs, redraws on change. */
+(function () {
+  const calcs = {}, cbs = [], store = {}, params = { loc: null };
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const dash = {
+    get colors() { return ['--c1', '--c2', '--c3', '--c4', '--c1', '--c2', '--c3', '--c4'].map((v) => `var(${v})`); },
+    calc(id, def) { calcs[id] = def; },
+    loader() {},
+    data(id) { return store[id] || { status: 'loading', data: [] }; },
+    onData(fn) { cbs.push(fn); try { fn(); } catch (e) { console.error(e); } },
+    params() { return { ...params }; },
+    setParams(p) { Object.assign(params, p); run(); },
+    resetParams() { params.loc = null; run(); },
+    setLink(name) { history.replaceState(null, '', '#' + name); },
+    refresh() { load(); },
+  };
+  window.dash = dash;
+  function run() { cbs.forEach((fn) => { try { fn(); } catch (e) { console.error(e); } }); }
+  function compute() {
+    Object.entries(calcs).forEach(([id, def]) => {
+      try { store[id] = { status: 'ok', data: def.fn(...def.inputs.map((i) => (store[i] || {}).data || [])) }; }
+      catch (e) { store[id] = { status: 'error', data: [], message: String(e) }; }
+    });
+  }
+  async function load() {
+    try {
+      const r = await fetch('data/frota_iconiq.json', { cache: 'no-store' });
+      const j = await r.json();
+      store.frota = { status: 'ok', data: j.rows || j };
+      const u = document.getElementById('fx-updated');
+      if (u && j.updated) u.textContent = `Dados atualizados em ${new Date(j.updated).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })} · Fonte: ficheiro master OpMargin-Fleet ICONIQ PT + WheelSys Vehicle List Report`;
+    } catch (e) { store.frota = { status: 'error', data: [], message: String(e) }; }
+    compute(); run();
+  }
+  let w = 0; window.addEventListener('resize', () => { if (Math.abs(innerWidth - w) > 20) { w = innerWidth; run(); } });
+  document.addEventListener('DOMContentLoaded', load);
+})();
+</script>
+</head>
+<body>
+<div id="dash-root">
+<style>
+  #dash-root { --dash-gutter: clamp(16px, 3vw, 32px); }
+  .fx { font-family: var(--font-anthropic-sans); color: var(--color-fg); max-width: 1280px; margin-inline: auto; display: flex; flex-direction: column; gap: var(--cds-gap-lg); }
+  .fx-head { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); align-items: flex-end; justify-content: space-between; }
+  .fx-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+  .fx-take { margin: var(--cds-gap-xs) 0 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); max-width: 70ch; }
+  .fx-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; }
+  .fx-seg button { font: inherit; font-size: var(--cds-font-size-caption); background: transparent; color: var(--color-fg-muted); border: 0; padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
+  .fx-seg button + button { border-left: 1px solid var(--color-border-line); }
+  .fx-seg button[aria-pressed="true"] { background: var(--color-panel); color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .fx-seg button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+  .fx-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: var(--cds-gap-md); }
+  .fx-kpi { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-xs); min-width: 0; }
+  .fx-kpi .lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .fx-kpi .val { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .fx-kpi .sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .fx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+  .fx-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; display: flex; flex-direction: column; gap: var(--cds-gap-sm); position: relative; }
+  .fx-card h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .fx-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; }
+  .fx-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .fx-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .fx-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .fx-chart { min-height: 160px; position: relative; }
+  .fx-chart svg text { fill: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-family: var(--font-anthropic-sans); }
+  .fx-chart svg text.strong { fill: var(--color-fg); }
+  .fx-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 2; }
+  .fx-tip .h { color: var(--cds-text-secondary); }
+  .fx-scroll { max-height: 26rem; overflow: auto; }
+  .fx-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .fx-table th { position: sticky; top: 0; background: var(--color-panel); text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: 0; border-bottom: 1px solid var(--color-border-line); z-index: 1; }
+  .fx-table th button { all: unset; cursor: pointer; display: block; padding: var(--cds-pad-xs) var(--cds-pad-sm); white-space: nowrap; }
+  .fx-table th button:focus-visible { outline: 2px solid var(--color-fg); }
+  .fx-table th.num, .fx-table td.num { text-align: right; }
+  .fx-table td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .fx-table td.wrap { white-space: normal; min-width: 12rem; }
+  .fx-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); }
+  .fx-bar { display: flex; height: 10px; border-radius: 4px; overflow: hidden; min-width: 80px; background: var(--cds-chart-grid); }
+  .fx-bar span { display: block; height: 100%; }
+  .fx-tools { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; }
+  .fx-tools input { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); min-width: 0; flex: 1 1 14rem; max-width: 22rem; }
+  .fx-count { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-left: auto; }
+  .fx-tabs { display: flex; gap: var(--cds-gap-md); border-bottom: 1px solid var(--color-border-line); }
+  .fx-tabs button { font: inherit; background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-xs) 0; color: var(--color-fg-muted); cursor: pointer; margin-bottom: -1px; }
+  .fx-tabs button[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .fx-tabs button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+  .fx-page { display: flex; flex-direction: column; gap: var(--cds-gap-lg); }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+  [data-dash-source-state=empty] { color: transparent; }
+  .fx-fail { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: inherit; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .fx-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+</style>
+
+<div class="fx">
+  <header class="fx-head" id="topo">
+    <div>
+      <h1>Frota ICONIQ PT</h1>
+      <p class="fx-take dash-skeleton" id="takeaway" data-source="kpi_loc">—</p>
+    </div>
+    <div class="fx-seg" id="locseg" role="group" aria-label="Localização"></div>
+  </header>
+
+
+  <section class="fx-kpis" id="kpis" aria-label="Indicadores">
+    <div class="fx-kpi"><span class="lbl">Viaturas ativas</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="total">—</span><span class="sub">sem defleet</span></div>
+    <div class="fx-kpi"><span class="lbl">Taxa de ocupação</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="ocupacao">—</span><span class="sub">alugadas ÷ ativas</span></div>
+    <div class="fx-kpi"><span class="lbl">Alugadas</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="alugadas">—</span><span class="sub">Rented</span></div>
+    <div class="fx-kpi"><span class="lbl">Disponíveis</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="disponiveis">—</span><span class="sub">Available</span></div>
+    <div class="fx-kpi"><span class="lbl">Non Revenue</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="nonrev">—</span><span class="sub">manutenção, avarias, etc.</span></div>
+    <div class="fx-kpi"><span class="lbl">Valor frota c/ IVA</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="valor">—</span><span class="sub dash-skeleton" data-source="kpi_loc" data-field="kmMedio">—</span></div>
+  </section>
+
+  <div class="fx-grid">
+    <section class="fx-card" id="estado-localizacao">
+      <h2>Situação por localização</h2>
+      <p class="fx-note">Viaturas ativas em cada aeroporto, pela situação atual no WheelSys.</p>
+      <div class="fx-legend" id="leg-estado"></div>
+      <div class="fx-chart" id="ch-loc" data-source="loc_estado"></div>
+    </section>
+    <section class="fx-card" id="non-revenue">
+      <h2>Non Revenue por motivo</h2>
+      <p class="fx-note" id="nr-note">Viaturas fora de aluguer e porquê.</p>
+      <div class="fx-chart" id="ch-nr" data-source="nr_motivo"></div>
+    </section>
+  </div>
+
+  <div class="fx-grid">
+    <section class="fx-card" id="marcas">
+      <h2>Frota por marca</h2>
+      <p class="fx-note">Número de viaturas; a parte escura está alugada.</p>
+      <div class="fx-chart" id="ch-make" data-source="by_make"></div>
+    </section>
+    <section class="fx-card" id="grupos">
+      <h2>Frota por grupo</h2>
+      <p class="fx-note">Car group, ordenado pelo número de viaturas.</p>
+      <div class="fx-scroll" style="max-height: 20rem">
+        <table class="fx-table" id="tb-group" data-source="by_group" data-row-key="Localizacao,CarGroup">
+          <thead><tr>
+            <th data-field="CarGroup"><button type="button">Grupo</button></th>
+            <th class="num" data-field="n"><button type="button">Viaturas</button></th>
+            <th class="num" data-field="ocupacao"><button type="button">Ocupação</button></th>
+            <th data-field="alugadas"><button type="button">Alugada · Disp. · NR</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <section class="fx-card" id="viaturas">
+    <h2>Viaturas</h2>
+    <p class="fx-note">Lista da folha master com a localização e situação do WheelSys. Viaturas em defleet não aparecem.</p>
+    <div class="fx-tools">
+      <input id="q" type="search" placeholder="Procurar matrícula, modelo, grupo…" aria-label="Procurar viaturas">
+      <div class="fx-seg" id="estseg" role="group" aria-label="Situação"></div>
+      <span class="fx-count" id="cnt"></span>
+    </div>
+    <div class="fx-scroll">
+      <table class="fx-table" id="tb-v" data-source="frota" data-row-key="Plate">
+        <thead><tr>
+          <th data-field="Plate"><button type="button">Matrícula</button></th>
+          <th data-field="Make"><button type="button">Marca</button></th>
+          <th data-field="Model"><button type="button">Modelo</button></th>
+          <th data-field="CarGroup"><button type="button">Grupo</button></th>
+          <th data-field="Ownership"><button type="button">Ownership</button></th>
+          <th data-field="Fuel"><button type="button">Combustível</button></th>
+          <th class="num" data-field="Mileage"><button type="button">Km</button></th>
+          <th data-field="FirstLicense"><button type="button">1.ª matrícula</button></th>
+          <th class="num" data-field="ValorComIVA"><button type="button">Valor c/ IVA</button></th>
+          <th data-field="Localizacao"><button type="button">Localização</button></th>
+          <th data-field="Situacao"><button type="button">Situação</button></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+  const LOCS = ['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'];
+  const ESTADOS = ['Alugada', 'Disponível', 'Non Revenue'];
+  window.fxLOCS = LOCS; window.fxESTADOS = ESTADOS;
+
+  dash.calc('kpi_loc', {
+    title: 'Indicadores por localização',
+    description: 'Contagens por situação, ocupação, valor e km médio, por aeroporto e no total.',
+    inputs: ['frota'],
+    fn: (frota) => {
+      const sets = [['Todas', frota], ...['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].map((l) => [l, frota.filter((r) => r.Localizacao === l)])];
+      return sets.map(([loc, rs]) => {
+        const total = rs.length;
+        const alugadas = rs.filter((r) => r.Estado === 'Alugada').length;
+        const valor = rs.reduce((s, r) => s + (Number(r.ValorComIVA) || 0), 0);
+        const km = rs.filter((r) => Number(r.Mileage) > 0);
+        return {
+          Localizacao: loc, total, alugadas,
+          disponiveis: rs.filter((r) => r.Estado === 'Disponível').length,
+          nonrev: rs.filter((r) => r.Estado === 'Non Revenue').length,
+          ocupacao: total ? alugadas / total : null,
+          valor, kmMedio: km.length ? km.reduce((s, r) => s + Number(r.Mileage), 0) / km.length : null,
+        };
+      });
+    },
+  });
+
+  dash.calc('loc_estado', {
+    title: 'Situação por localização',
+    description: 'Viaturas por aeroporto e situação (Alugada, Disponível, Non Revenue).',
+    inputs: ['frota'],
+    fn: (frota) => {
+      const out = [];
+      ['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].forEach((l) => ['Alugada', 'Disponível', 'Non Revenue'].forEach((e) => {
+        out.push({ Localizacao: l, Estado: e, n: frota.filter((r) => r.Localizacao === l && r.Estado === e).length });
+      }));
+      return out;
+    },
+  });
+
+  dash.calc('nr_motivo', {
+    title: 'Non Revenue por motivo',
+    description: 'Viaturas Non Revenue por motivo, por aeroporto e no total.',
+    inputs: ['frota'],
+    fn: (frota) => {
+      const nr = frota.filter((r) => r.Estado === 'Non Revenue');
+      const out = [];
+      ['Todas', 'Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].forEach((l) => {
+        const rs = l === 'Todas' ? nr : nr.filter((r) => r.Localizacao === l);
+        const m = new Map();
+        rs.forEach((r) => m.set(r.MotivoNR, (m.get(r.MotivoNR) || 0) + 1));
+        m.forEach((n, motivo) => out.push({ Localizacao: l, Motivo: motivo, n }));
+      });
+      return out;
+    },
+  });
+
+  dash.calc('by_make', {
+    title: 'Frota por marca',
+    description: 'Viaturas e alugadas por marca, por aeroporto e no total.',
+    inputs: ['frota'],
+    fn: (frota) => {
+      const out = [];
+      ['Todas', 'Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].forEach((l) => {
+        const rs = l === 'Todas' ? frota : frota.filter((r) => r.Localizacao === l);
+        const m = new Map();
+        rs.forEach((r) => { const o = m.get(r.Make) || { n: 0, alugadas: 0 }; o.n++; if (r.Estado === 'Alugada') o.alugadas++; m.set(r.Make, o); });
+        m.forEach((o, make) => out.push({ Localizacao: l, Make: make, n: o.n, alugadas: o.alugadas }));
+      });
+      return out;
+    },
+  });
+
+  dash.calc('by_group', {
+    title: 'Frota por grupo',
+    description: 'Viaturas por car group e situação, com ocupação, por aeroporto e no total.',
+    inputs: ['frota'],
+    fn: (frota) => {
+      const out = [];
+      ['Todas', 'Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].forEach((l) => {
+        const rs = l === 'Todas' ? frota : frota.filter((r) => r.Localizacao === l);
+        const m = new Map();
+        rs.forEach((r) => {
+          const o = m.get(r.CarGroup) || { n: 0, alugadas: 0, disponiveis: 0, nonrev: 0 };
+          o.n++;
+          if (r.Estado === 'Alugada') o.alugadas++; else if (r.Estado === 'Disponível') o.disponiveis++; else if (r.Estado === 'Non Revenue') o.nonrev++;
+          m.set(r.CarGroup, o);
+        });
+        m.forEach((o, g) => out.push({ Localizacao: l, CarGroup: g, ...o, ocupacao: o.n ? o.alugadas / o.n : null }));
+      });
+      return out;
+    },
+  });
+
+</script>
+
+<script>
+  (() => {
+    const LOCS = window.fxLOCS, ESTADOS = window.fxESTADOS;
+    const fInt = d3.format(',');
+    const fPct = d3.format('.1%');
+    const fEur = (v) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', notation: 'compact', maximumFractionDigits: 1 }).format(v);
+    const fEurFull = (v) => v == null ? '' : new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v);
+    const fKm = (v) => new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 0 }).format(v);
+    const enc = encodeURIComponent;
+    const colOf = (e) => e === 'Alugada' ? dash.colors[0] : e === 'Disponível' ? dash.colors[1] : dash.colors[3];
+    const curLoc = () => dash.params().loc || 'Todas';
+
+    // Location segmented control
+    const seg = document.getElementById('locseg');
+    ['Todas', ...LOCS].forEach((l) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = l === 'Todas' ? 'Todas' : l.replace(' Aeroporto', ''); b.dataset.loc = l;
+      b.addEventListener('click', () => dash.setParams({ loc: l === 'Todas' ? null : l }));
+      seg.appendChild(b);
+    });
+    // Estado control for table
+    let estFilter = 'Todas';
+    const eseg = document.getElementById('estseg');
+    ['Todas', ...ESTADOS].forEach((e) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = e; b.dataset.e = e;
+      b.addEventListener('click', () => { estFilter = e; drawTable(); });
+      eseg.appendChild(b);
+    });
+    const leg = document.getElementById('leg-estado');
+    ESTADOS.forEach((e) => { const s = document.createElement('span'); const i = document.createElement('i'); i.style.background = colOf(e); s.append(i, e); leg.appendChild(s); });
+
+    function failOrWait(el, st) {
+      el.replaceChildren();
+      if (st === 'error' || st === 'connect' || st === 'declined') { const d = document.createElement('div'); d.className = 'fx-fail'; d.textContent = 'Failed to load'; el.appendChild(d); el.classList.remove('dash-skeleton'); }
+      else el.classList.add('dash-skeleton');
+    }
+    function tooltip(box) {
+      let t = box.querySelector('.fx-tip');
+      if (!t) { t = document.createElement('div'); t.className = 'fx-tip'; t.hidden = true; box.appendChild(t); }
+      return {
+        show(ev, head, lines) {
+          t.replaceChildren();
+          const h = document.createElement('div'); h.className = 'h'; h.textContent = head; t.appendChild(h);
+          lines.forEach(([c, txt]) => { const d = document.createElement('div'); if (c) { const i = document.createElement('i'); i.style.cssText = `display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:${c}`; d.appendChild(i); } d.append(txt); t.appendChild(d); });
+          t.hidden = false;
+          const r = box.getBoundingClientRect();
+          let x = ev.clientX - r.left + 12, y = ev.clientY - r.top + 12;
+          x = Math.min(x, r.width - t.offsetWidth - 4); x = Math.max(4, x);
+          t.style.left = x + 'px'; t.style.top = y + 'px';
+        },
+        hide() { t.hidden = true; },
+      };
+    }
+
+    // Horizontal bars helper
+    function hbars(box, items, { stacked, segs, max, label, tipHead, tipLines, valFmt }) {
+      const W = box.clientWidth || 400;
+      const rowH = 26, gap = 8;
+      const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${items.length * (rowH + gap) + 4}`);
+      const probe = svg.append('text').attr('class', 'strong').text('');
+      box.replaceChildren(svg.node());
+      let lw = 0; items.forEach((d) => { probe.text(label(d)); lw = Math.max(lw, probe.node().getComputedTextLength()); });
+      probe.remove();
+      const left = Math.min(lw + 12, W * 0.45), right = valFmt ? 72 : 44;
+      const x = d3.scaleLinear([0, max || 1], [0, Math.max(10, W - left - right)]);
+      const tip = tooltip(box);
+      items.forEach((d, i) => {
+        const g = svg.append('g').attr('transform', `translate(0,${i * (rowH + gap)})`);
+        g.append('text').attr('class', 'strong').attr('x', left - 10).attr('y', rowH / 2).attr('dy', '0.35em').attr('text-anchor', 'end').text(label(d));
+        g.append('rect').attr('x', left).attr('y', 3).attr('height', rowH - 6).attr('width', x(max || 1)).attr('rx', 4).attr('fill', 'var(--cds-chart-grid)');
+        let acc = 0;
+        segs(d).forEach((s) => {
+          if (!s.v) return;
+          g.append('rect').attr('x', left + x(acc)).attr('y', 3).attr('height', rowH - 6).attr('width', Math.max(1, x(s.v))).attr('rx', stacked ? 0 : 4).attr('fill', s.c);
+          acc += s.v;
+        });
+        g.append('text').attr('class', 'strong').attr('x', left + x(acc) + 6).attr('y', rowH / 2).attr('dy', '0.35em').text((valFmt || fInt)(acc));
+        g.append('rect').attr('x', 0).attr('y', 0).attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+          .on('mousemove', (ev) => tip.show(ev, tipHead(d), tipLines(d))).on('mouseleave', () => tip.hide());
+      });
+    }
+
+    let lastRows = [];
+    let sortKey = 'Plate', sortDir = 1;
+    const vt = document.getElementById('tb-v');
+    function drawTable() {
+      eseg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.e === estFilter)));
+      const tb = vt.querySelector('tbody');
+      const loc = curLoc();
+      const q = document.getElementById('q').value.trim().toLowerCase();
+      let rows = lastRows.filter((r) => (loc === 'Todas' || r.Localizacao === loc) && (estFilter === 'Todas' || r.Estado === estFilter));
+      if (q) rows = rows.filter((r) => [r.Plate, r.Model, r.Make, r.CarGroup, r.Situacao, r.Ownership, r.Fuel].join(' ').toLowerCase().includes(q));
+      const num = ['Mileage', 'ValorComIVA'].includes(sortKey);
+      rows.sort((a, b) => num ? ((Number(a[sortKey]) || 0) - (Number(b[sortKey]) || 0)) * sortDir : String(a[sortKey] ?? '').localeCompare(String(b[sortKey] ?? ''), 'pt') * sortDir);
+      vt.querySelectorAll('th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === sortKey ? (sortDir > 0 ? 'ascending' : 'descending') : 'none'));
+      tb.replaceChildren(...rows.map((r) => {
+        const tr = document.createElement('tr');
+        const cells = [
+          [r.Plate], [r.Make], [r.Model, 'wrap'], [r.CarGroup], [r.Ownership], [r.Fuel],
+          [r.Mileage == null ? '' : fKm(r.Mileage), 'num'], [r.FirstLicense ? d3.utcFormat('%d/%m/%Y')(new Date(r.FirstLicense)) : ''],
+          [fEurFull(r.ValorComIVA), 'num'], [r.Localizacao],
+        ];
+        cells.forEach(([v, cls]) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = v ?? ''; tr.appendChild(td); });
+        const td = document.createElement('td'); const p = document.createElement('span'); p.className = 'fx-pill'; p.textContent = r.Situacao;
+        p.style.borderColor = colOf(r.Estado); td.appendChild(p); tr.appendChild(td);
+        return tr;
+      }));
+      document.getElementById('cnt').textContent = `${fInt(rows.length)} viaturas`;
+    }
+    document.getElementById('q').addEventListener('input', drawTable);
+    vt.querySelectorAll('th button').forEach((b) => b.addEventListener('click', () => {
+      const f = b.parentElement.dataset.field;
+      if (sortKey === f) sortDir = -sortDir; else { sortKey = f; sortDir = 1; }
+      drawTable();
+    }));
+
+    let gSortKey = 'n', gSortDir = -1;
+    const gt = document.getElementById('tb-group');
+    gt.querySelectorAll('th button').forEach((b) => b.addEventListener('click', () => {
+      const f = b.parentElement.dataset.field;
+      if (gSortKey === f) gSortDir = -gSortDir; else { gSortKey = f; gSortDir = f === 'CarGroup' ? 1 : -1; }
+      drawGroups();
+    }));
+    function drawGroups() {
+      const s = dash.data('by_group');
+      const tb = gt.querySelector('tbody');
+      if (s.status !== 'ok') { tb.replaceChildren(); return; }
+      const loc = curLoc();
+      const rows = s.data.filter((r) => r.Localizacao === loc);
+      const max = d3.max(rows, (r) => r.n) || 1;
+      rows.sort((a, b) => gSortKey === 'CarGroup' ? a.CarGroup.localeCompare(b.CarGroup, 'pt', { numeric: true }) * gSortDir : ((a[gSortKey] ?? 0) - (b[gSortKey] ?? 0)) * gSortDir);
+      gt.querySelectorAll('th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === gSortKey ? (gSortDir > 0 ? 'ascending' : 'descending') : 'none'));
+      tb.replaceChildren(...rows.map((r) => {
+        const tr = document.createElement('tr');
+        tr.dataset.key = `${enc(r.Localizacao)},${enc(r.CarGroup)}`;
+        const a = document.createElement('td'); a.textContent = r.CarGroup;
+        const b = document.createElement('td'); b.className = 'num'; b.textContent = fInt(r.n);
+        const c = document.createElement('td'); c.className = 'num'; c.textContent = r.ocupacao == null ? '' : fPct(r.ocupacao);
+        const d = document.createElement('td'); const bar = document.createElement('div'); bar.className = 'fx-bar';
+        bar.style.width = `${Math.max(12, (r.n / max) * 100)}%`;
+        [[r.alugadas, 'Alugada'], [r.disponiveis, 'Disponível'], [r.nonrev, 'Non Revenue']].forEach(([v, e]) => { const sp = document.createElement('span'); sp.style.width = `${(v / r.n) * 100}%`; sp.style.background = colOf(e); bar.appendChild(sp); });
+        bar.title = '';
+        d.appendChild(bar);
+        tr.append(a, b, c, d);
+        return tr;
+      }));
+    }
+
+    let redraw = () => {};
+    dash.onData(() => redraw());
+
+    redraw = () => {
+      const loc = curLoc();
+      seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.loc === loc)));
+      const w = `Localizacao=${enc(loc)}`;
+
+      // KPIs
+      const k = dash.data('kpi_loc');
+      document.querySelectorAll('#kpis [data-source="kpi_loc"], #takeaway').forEach((el) => { if (el.dataset.field) el.dataset.where = w; });
+      const take = document.getElementById('takeaway');
+      if (k.status === 'ok') {
+        const r = k.data.find((x) => x.Localizacao === loc);
+        document.querySelectorAll('#kpis [data-source="kpi_loc"]').forEach((el) => {
+          el.classList.remove('dash-skeleton');
+          const f = el.dataset.field, v = r ? r[f] : null;
+          el.textContent = v == null ? '—' : f === 'ocupacao' ? fPct(v) : f === 'valor' ? fEur(v) : f === 'kmMedio' ? `${fKm(v)} km médios` : fInt(v);
+        });
+        take.classList.remove('dash-skeleton');
+        take.textContent = r ? `${loc === 'Todas' ? 'Na frota ativa' : 'Em ' + loc}, ${fPct(r.ocupacao)} das ${fInt(r.total)} viaturas estão alugadas; ${fInt(r.disponiveis)} disponíveis e ${fInt(r.nonrev)} em Non Revenue. Localização e situação vêm do WheelSys, atualizadas todos os dias às 11h.` : '—';
+      } else {
+        document.querySelectorAll('#kpis [data-source="kpi_loc"]').forEach((el) => { el.textContent = '—'; el.classList.toggle('dash-skeleton', k.status === 'loading'); });
+        take.textContent = '—';
+      }
+
+      // Location chart
+      const le = dash.data('loc_estado'); const chL = document.getElementById('ch-loc');
+      if (le.status === 'ok') {
+        chL.classList.remove('dash-skeleton');
+        const items = LOCS.map((l) => ({ l, by: Object.fromEntries(ESTADOS.map((e) => [e, (le.data.find((r) => r.Localizacao === l && r.Estado === e) || {}).n || 0])) }));
+        const max = d3.max(items, (d) => d3.sum(ESTADOS, (e) => d.by[e]));
+        hbars(chL, items, {
+          stacked: true, max, label: (d) => d.l.replace(' Aeroporto', ''),
+          segs: (d) => ESTADOS.map((e) => ({ v: d.by[e], c: colOf(e) })),
+          tipHead: (d) => d.l,
+          tipLines: (d) => { const t = d3.sum(ESTADOS, (e) => d.by[e]); return ESTADOS.map((e) => [colOf(e), `${e}: ${fInt(d.by[e])} (${fPct(d.by[e] / t)})`]); },
+        });
+      } else failOrWait(chL, le.status);
+
+      // Non revenue chart
+      const nr = dash.data('nr_motivo'); const chN = document.getElementById('ch-nr');
+      if (nr.status === 'ok') {
+        chN.classList.remove('dash-skeleton');
+        const items = nr.data.filter((r) => r.Localizacao === loc).sort((a, b) => b.n - a.n);
+        if (!items.length) { chN.replaceChildren(); const p = document.createElement('p'); p.className = 'fx-note'; p.textContent = 'Sem viaturas em Non Revenue.'; chN.appendChild(p); }
+        else hbars(chN, items, {
+          max: d3.max(items, (d) => d.n), label: (d) => d.Motivo,
+          segs: (d) => [{ v: d.n, c: colOf('Non Revenue') }],
+          tipHead: (d) => d.Motivo, tipLines: (d) => [[null, `${fInt(d.n)} viaturas`]],
+        });
+      } else failOrWait(chN, nr.status);
+
+      // Make chart
+      const bm = dash.data('by_make'); const chM = document.getElementById('ch-make');
+      if (bm.status === 'ok') {
+        chM.classList.remove('dash-skeleton');
+        const items = bm.data.filter((r) => r.Localizacao === loc).sort((a, b) => b.n - a.n);
+        hbars(chM, items, {
+          stacked: true, max: d3.max(items, (d) => d.n), label: (d) => d.Make,
+          segs: (d) => [{ v: d.alugadas, c: dash.colors[0] }, { v: d.n - d.alugadas, c: 'var(--cds-chart-muted)' }],
+          tipHead: (d) => d.Make,
+          tipLines: (d) => [[null, `${fInt(d.n)} viaturas`], [dash.colors[0], `Alugadas: ${fInt(d.alugadas)} (${fPct(d.alugadas / d.n)})`]],
+        });
+      } else failOrWait(chM, bm.status);
+
+      drawGroups();
+
+      const f = dash.data('frota');
+      if (f.status === 'ok') { lastRows = f.data; drawTable(); }
+      else { lastRows = []; vt.querySelector('tbody').replaceChildren(); document.getElementById('cnt').textContent = f.status === 'error' ? 'Failed to load' : ''; }
+    };
+    redraw();
+  })();
+</script>
+
+<p class="fx-src" id="fx-updated" style="max-width:1280px;margin:24px auto 0"></p>
+</div>
+</body>
+</html>

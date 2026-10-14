@@ -1,0 +1,797 @@
+Plate,Situacao,Localizacao
+BS-04-MT,Rented (XML AutoUnion),Faro Airport
+BS-19-MS,Available,Faro Airport
+BS-03-MR,Rented (Walk-in),Oporto Airport
+BS-09-MT,Rented (XML AutoUnion),Faro Airport
+BS-95-MU,Rented (XML AutoUnion),Faro Airport
+BS-24-MU,Rented (XML AutoUnion),Lisbon Airport
+BS-30-MS,Rented (XML AutoUnion),Oporto Airport
+BS-57-MR,Rented (XML AutoUnion),Lisbon Airport
+BS-93-MP,Rented (XML AutoUnion),Faro Airport
+BS-12-MQ,Rented (XML AutoUnion),Lisbon Airport
+BS-54-MT,Rented (XML AutoUnion),Lisbon Airport
+BS-99-MT,Rented (XML AutoUnion),Lisbon Airport
+BS-30-MT,Rented (XML AutoUnion),Oporto Airport
+BS-47-MQ,Rented (XML AutoUnion),Faro Airport
+BS-54-MQ,Rented (XML AutoUnion),Faro Airport
+BS-58-MQ,Rented (XML AutoUnion),Lisbon Airport
+BS-05-UM,Rented (XML AutoUnion),Lisbon Airport
+BS-93-MU,Available,Lisbon Airport
+BS-15-MS,Rented (XML AutoUnion),Lisbon Airport
+BS-32-MQ,Rented (XML AutoUnion),Lisbon Airport
+BT-72-VD,Rented (XML AutoUnion),Faro Airport
+BT-10-VG,Rented (XML AutoUnion),Lisbon Airport
+CH-68-TV,Available,Lisbon Airport
+BT-65-VE,Available,Lisbon Airport
+CG-02-VJ,Rented (XML AutoUnion),Oporto Airport
+CG-93-ZE,Non Revenue (Manutenção),Faro Airport
+CH-09-TV,Rented (XML AutoUnion),Lisbon Airport
+CG-58-ZE,Rented (XML AutoUnion),Lisbon Airport
+CH-99-BO,Available,Oporto Airport
+CH-69-TU,Rented (XML AutoUnion),Faro Airport
+BT-76-VI,Rented (XML AutoUnion),Faro Airport
+CG-54-VI,Rented (XML AutoUnion),Faro Airport
+CG-92-ZG,Rented (XML AutoUnion),Faro Airport
+CG-43-ZD,Available,Lisbon Airport
+CF-04-MH,Non Revenue (Empregado ),Lisbon Airport
+CH-14-AQ,Rented (XML AutoUnion),Oporto Airport
+CF-97-MG,Non Revenue (Manutenção),Lisbon Airport
+CH-24-AR,Rented (XML AutoUnion),Oporto Airport
+CH-41-AR,Rented (XML AutoUnion),Faro Airport
+CH-00-AR,Rented (XML AutoUnion),Lisbon Airport
+CH-30-AR,Rented (XML AutoUnion),Faro Airport
+CF-92-MG,Rented (XML AutoUnion),Faro Airport
+CF-99-OL,Non Revenue (Manutenção),Oporto Airport
+CF-85-OL,Rented (XML AutoUnion),Oporto Airport
+CF-06-MH,Rented (XML AutoUnion),Faro Airport
+CH-64-AQ,Rented (XML AutoUnion),Oporto Airport
+CH-63-AQ,Rented (XML AutoUnion),Lisbon Airport
+CH-08-AR,Rented (XML AutoUnion),Faro Airport
+CH-99-BJ,Rented (XML AutoUnion),Oporto Airport
+CH-74-AQ,Rented (XML AutoUnion),Lisbon Airport
+CH-25-AQ,Rented (XML AutoUnion),Lisbon Airport
+CH-21-AR,Rented (XML AutoUnion),Oporto Airport
+CG-63-BI,Available,Oporto Airport
+CG-33-BL,Rented (XML AutoUnion),Lisbon Airport
+CG-11-BJ,Rented (XML AutoUnion),Oporto Airport
+CG-17-BJ,Rented (XML AutoUnion),Lisbon Airport
+CG-78-BJ,Non Revenue (Administração),Lisbon Airport
+CH-28-PU,Rented (XML AutoUnion),Oporto Airport
+CH-34-PU,Rented (XML AutoUnion),Lisbon Airport
+BU-60-SP,Rented (XML AutoUnion),Oporto Airport
+BU-52-SQ,Available,Faro Airport
+BU-27-SN,Rented (XML AutoUnion),Lisbon Airport
+BU-05-SQ,Available,Oporto Airport
+CG-45-BI,Rented (XML AutoUnion),Oporto Airport
+CH-72-AQ,Available,Oporto Airport
+BU-80-SP,Rented (XML AutoUnion),Faro Airport
+CH-83-EB,Rented (XML AutoUnion),Faro Airport
+CG-54-ZI,Rented (XML AutoUnion),Lisbon Airport
+CG-95-VG,Available,Lisbon Airport
+CG-52-ZF,Available (Ready),Lisbon Airport
+CG-80-ZG,Rented (XML AutoUnion),Lisbon Airport
+CG-24-ZF,Rented (XML AutoUnion),Oporto Airport
+CG-51-ZH,Rented (XML AutoUnion),Lisbon Airport
+CG-14-ZJ,Rented (XML AutoUnion),Lisbon Airport
+CG-23-VM,Rented (XML AutoUnion),Faro Airport
+CG-84-VJ,Rented (XML AutoUnion),Oporto Airport
+CG-44-VI,Non Revenue (Avaria),Faro Airport
+CG-71-ZG,Rented (XML AutoUnion),Faro Airport
+CG-48-ZH,Rented (XML AutoUnion),Faro Airport
+CG-18-ZG,Rented (XML AutoUnion),Oporto Airport
+CH-68-BN,Available,Lisbon Airport
+CH-02-BO,Rented (XML AutoUnion),Faro Airport
+BU-69-BZ,Rented (XML AutoUnion),Faro Airport
+BU-29-CB,Rented (XML AutoUnion),Oporto Airport
+BU-62-BZ,Rented (XML AutoUnion),Faro Airport
+BU-44-BX,Available,Faro Airport
+BU-95-CB,Rented (XML AutoUnion),Faro Airport
+BU-91-BZ,Rented (XML AutoUnion),Faro Airport
+BU-96-BV,Rented (XML AutoUnion),Faro Airport
+BU-86-BZ,Rented (XML AutoUnion),Lisbon Airport
+BU-15-CB,Available,Oporto Airport
+BU-45-BZ,Rented (XML AutoUnion),Lisbon Airport
+BU-29-BZ,Rented (XML AutoUnion),Faro Airport
+BU-84-BX,Rented (XML AutoUnion),Faro Airport
+BU-36-BZ,Non Revenue (Consignação/outros),Lisbon Airport
+BU-02-CB,Rented (XML AutoUnion),Faro Airport
+BU-79-BZ,Available,Faro Airport
+BU-46-CB,Rented (XML AutoUnion),Faro Airport
+BU-83-CB,Rented (XML AutoUnion),Oporto Airport
+BU-36-CB,Rented (XML AutoUnion),Lisbon Airport
+BU-28-CB,Rented (XML AutoUnion),Faro Airport
+BU-21-CC,Rented (XML AutoUnion),Faro Airport
+BU-27-BX,Rented (XML AutoUnion),Faro Airport
+BU-07-CB,Rented (XML AutoUnion),Lisbon Airport
+BU-37-BZ,Available,Lisbon Airport
+BU-77-CB,Rented (XML AutoUnion),Oporto Airport
+BU-35-CC,Rented (XML AutoUnion),Faro Airport
+BU-30-BZ,Rented (XML AutoUnion),Lisbon Airport
+BU-94-BX,Available,Faro Airport
+BU-21-BX,Rented (XML AutoUnion),Lisbon Airport
+BU-30-BX,Rented (XML AutoUnion),Faro Airport
+BU-89-BZ,Rented (XML AutoUnion),Oporto Airport
+BU-65-BX,Rented (XML AutoUnion),Oporto Airport
+BU-18-BX,Rented (XML AutoUnion),Lisbon Airport
+BU-22-BX,Available,Oporto Airport
+BU-99-BV,Rented (XML AutoUnion),Oporto Airport
+BU-52-BX,Rented (XML AutoUnion),Faro Airport
+CF-26-XO,Rented (XML AutoUnion),Faro Airport
+BU-63-CB,Rented (Walk-in),Faro Airport
+BU-14-CB,Rented (XML AutoUnion),Oporto Airport
+BU-44-BZ,Rented (XML AutoUnion),Faro Airport
+BU-87-BX,Rented (XML AutoUnion),Faro Airport
+BU-71-BZ,Rented (XML AutoUnion),Faro Airport
+BU-51-CC,Rented (XML AutoUnion),Lisbon Airport
+BU-42-CB,Rented (XML AutoUnion),Oporto Airport
+BU-88-BX,Rented (XML AutoUnion),Faro Airport
+BU-12-CC,Rented (XML AutoUnion),Lisbon Airport
+BU-59-BZ,Rented (XML AutoUnion),Lisbon Airport
+BU-08-CB,Available,Lisbon Airport
+BU-32-BZ,Rented (XML AutoUnion),Faro Airport
+CH-53-AS,Rented (XML AutoUnion),Lisbon Airport
+CF-45-QJ,Rented (XML AutoUnion),Lisbon Airport
+CF-94-QL,Rented (XML AutoUnion),Oporto Airport
+CF-55-QP,Rented (XML AutoUnion),Faro Airport
+CF-89-QQ,Rented (XML AutoUnion),Faro Airport
+CF-84-QO,Rented (XML AutoUnion),Lisbon Airport
+CF-63-XQ,Rented (XML AutoUnion),Lisbon Airport
+CG-34-ZH,Rented (XML AutoUnion),Oporto Airport
+CG-61-ZJ,Rented (XML AutoUnion),Faro Airport
+CG-42-ZJ,Rented (XML AutoUnion),Lisbon Airport
+CH-62-AV,Rented (XML AutoUnion),Lisbon Airport
+BS-87-SE,Rented (XML AutoUnion),Lisbon Airport
+CH-80-UP,Rented (XML AutoUnion),Lisbon Airport
+CI-43-TN,Rented (XML AutoUnion),Lisbon Airport
+CH-20-UQ,Available,Lisbon Airport
+CJ-51-LH,Available,Lisbon Airport
+CJ-84-LF,Available,Lisbon Airport
+CJ-42-LH,Available,Lisbon Airport
+CH-46-UQ,Rented (XML AutoUnion),Oporto Airport
+CH-16-UQ,Available,Faro Airport
+CH-77-UQ,Available,Lisbon Airport
+CH-95-UR,Rented (XML AutoUnion),Faro Airport
+CH-15-UR,Rented (XML AutoUnion),Lisbon Airport
+CH-60-UQ,Rented (XML AutoUnion),Faro Airport
+CH-34-XQ,Non Revenue (Venda/Devolução),Faro Airport
+CH-83-UO,Available,Oporto Airport
+CH-42-UP,Available,Lisbon Airport
+CH-09-UQ,Non Revenue (Assistência em Viagem ),Faro Airport
+CH-06-UR,Rented (XML AutoUnion),Faro Airport
+CI-22-TN,Available,Faro Airport
+CI-50-TM,Available,Lisbon Airport
+CI-09-TN,Rented (XML AutoUnion),Faro Airport
+CI-67-TM,Available,Lisbon Airport
+CI-23-TN,Rented,Oporto Airport
+CI-86-TL,Rented (XML AutoUnion),Lisbon Airport
+CI-10-TN,Rented (XML AutoUnion),Lisbon Airport
+CI-63-TM,Available,Lisbon Airport
+CI-93-TL,Rented (XML AutoUnion),Lisbon Airport
+CI-18-TM,Non Revenue (Manutenção),Oporto Airport
+CI-24-TM,Rented (XML AutoUnion),Faro Airport
+CI-90-TM,Available,Oporto Airport
+CI-04-TN,Available,Oporto Airport
+CI-82-TL,Available,Oporto Airport
+CI-49-TM,Available,Oporto Airport
+CI-30-TM,Available,Oporto Airport
+CI-03-TN,Available,Oporto Airport
+CI-06-TN,Available,Oporto Airport
+CJ-48-LG,Rented (XML AutoUnion),Lisbon Airport
+CJ-51-LG,Available,Faro Airport
+CI-46-TM,Rented (XML AutoUnion),Faro Airport
+CJ-90-LF,Available,Oporto Airport
+CJ-78-LG,Rented (XML AutoUnion),Oporto Airport
+CJ-30-LF,Available,Faro Airport
+CJ-81-LF,Available,Oporto Airport
+CJ-50-LH,Available,Lisbon Airport
+BU-96-VH,Rented (XML AutoUnion),Lisbon Airport
+BU-37-VJ,Rented (XML AutoUnion),Lisbon Airport
+BU-50-VJ,Rented (XML AutoUnion),Lisbon Airport
+BU-36-VJ,Rented (XML AutoUnion),Oporto Airport
+BU-33-VJ,Rented,Lisbon Airport
+BU-67-VJ,Rented (XML AutoUnion),Lisbon Airport
+BU-59-VJ,Rented (XML AutoUnion),Lisbon Airport
+BU-13-VJ,Rented (XML AutoUnion),Faro Airport
+BU-04-VJ,Non Revenue (Consignação/outros),Lisbon Airport
+BU-55-VJ,Rented (XML AutoUnion),Faro Airport
+BU-60-VJ,Rented (XML AutoUnion),Lisbon Airport
+BU-56-VJ,Rented (XML AutoUnion),Lisbon Airport
+CE-76-BJ,Rented (XML AutoUnion),Lisbon Airport
+CE-94-BJ,Available,Faro Airport
+CE-71-BJ,Rented (XML AutoUnion),Oporto Airport
+CE-24-BJ,Rented (XML AutoUnion),Oporto Airport
+CE-23-BJ,Rented (XML AutoUnion),Oporto Airport
+CE-62-BJ,Rented,Lisbon Airport
+CE-67-BJ,Available,Lisbon Airport
+CE-30-BJ,Non Revenue (Station Movement),Oporto Airport
+CE-42-BJ,Rented (XML AutoUnion),Faro Airport
+CE-33-BJ,Available,Oporto Airport
+CE-16-XN,Rented (XML AutoUnion),Oporto Airport
+CE-30-XP,Rented (XML AutoUnion),Oporto Airport
+CE-15-XP,Rented,Oporto Airport
+CE-12-XN,Rented (XML AutoUnion),Lisbon Airport
+CE-17-NQ,Rented (XML AutoUnion),Oporto Airport
+CE-36-NQ,Rented (XML AutoUnion),Lisbon Airport
+CE-25-XN,Rented (XML AutoUnion),Faro Airport
+CE-63-XN,Rented (XML AutoUnion),Oporto Airport
+CE-72-XN,Rented (XML AutoUnion),Faro Airport
+CF-92-GF,Available,Oporto Airport
+CE-51-BJ,Rented (XML AutoUnion),Faro Airport
+CE-63-BJ,Rented (XML AutoUnion),Oporto Airport
+CE-18-BJ,Non Revenue (Empregado ),Lisbon Airport
+CE-45-BJ,Rented (XML AutoUnion),Faro Airport
+CE-41-BJ,Rented (XML AutoUnion),Oporto Airport
+CE-75-BJ,Rented (XML AutoUnion),Lisbon Airport
+CE-73-BJ,Rented (XML AutoUnion),Faro Airport
+CE-83-BJ,Rented (XML AutoUnion),Lisbon Airport
+CE-58-BJ,Available,Oporto Airport
+CE-93-BJ,Available,Lisbon Airport
+CE-47-BJ,Rented (XML AutoUnion),Faro Airport
+CF-77-ET,Rented (XML AutoUnion),Lisbon Airport
+CE-65-BJ,Rented (XML AutoUnion),Lisbon Airport
+CE-29-BJ,Rented (XML AutoUnion),Faro Airport
+CE-89-BJ,Rented (XML AutoUnion),Lisbon Airport
+CE-36-XN,Rented (XML AutoUnion),Lisbon Airport
+CE-64-XN,Rented (XML AutoUnion),Oporto Airport
+CE-25-XP,Rented (XML AutoUnion),Oporto Airport
+CE-79-XN,Rented (XML AutoUnion),Oporto Airport
+CE-34-XP,Rented (XML AutoUnion),Faro Airport
+CE-12-XP,Rented (XML AutoUnion),Oporto Airport
+CE-67-XN,Available,Oporto Airport
+CE-19-XN,Available,Oporto Airport
+CE-28-XN,Available,Lisbon Airport
+CE-80-BJ,Rented (XML AutoUnion),Faro Airport
+CE-23-XP,Rented (XML AutoUnion),Oporto Airport
+CE-37-XP,Rented (XML AutoUnion),Faro Airport
+CE-51-XP,Rented (XML AutoUnion),Faro Airport
+CE-11-XN,Available,Faro Airport
+CE-21-XN,Rented (XML AutoUnion),Faro Airport
+CF-42-GG,Non Revenue (Empregado ),Faro Airport
+CG-65-DS,Non Revenue (Empregado ),Lisbon Airport
+CG-97-DR,Rented,Lisbon Airport
+CI-10-NZ,Available,Faro Airport
+CG-28-DT,Available,Oporto Airport
+CG-95-DS,Rented (Walk-in),Lisbon Airport
+CI-28-NX,Rented (XML AutoUnion),Oporto Airport
+CI-16-PL,Available,Oporto Airport
+CF-27-AH,Rented (XML AutoUnion),Oporto Airport
+CF-67-GF,Available,Faro Airport
+CF-11-GG,Available,Faro Airport
+CF-62-AG,Rented,Lisbon Airport
+CF-49-GF,Available,Faro Airport
+CG-77-DT,Rented,Lisbon Airport
+CG-53-DT,Non Revenue (Empregado ),Lisbon Airport
+CG-53-DS,Rented,Lisbon Airport
+CI-02-NZ,Rented (XML AutoUnion),Lisbon Airport
+CG-26-DT,Available,Faro Airport
+CG-51-DS,Available,Faro Airport
+CI-91-NX,Available,Oporto Airport
+CH-71-AQ,Available,Faro Airport
+CH-39-AR,Available,Faro Airport
+CH-33-AQ,Rented (XML AutoUnion),Oporto Airport
+CH-32-AQ,Available,Faro Airport
+CH-97-AQ,Rented (XML AutoUnion),Faro Airport
+CH-84-ZI,Rented (XML AutoUnion),Oporto Airport
+CH-29-AQ,Non Revenue (Consignação/outros),Lisbon Airport
+CH-19-AQ,Available,Oporto Airport
+CH-63-ZI,Available,Oporto Airport
+CH-76-AQ,Available,Faro Airport
+CH-56-AQ,Available,Faro Airport
+CH-29-AR,Non Revenue (Empregado ),Lisbon Airport
+CH-41-AQ,Available,Faro Airport
+CH-44-AQ,Available,Oporto Airport
+CH-94-ZI,Rented (XML AutoUnion),Oporto Airport
+CH-74-ZI,Available,Oporto Airport
+CH-57-AQ,Available,Faro Airport
+CH-51-AQ,Rented (XML AutoUnion),Lisbon Airport
+CH-40-AQ,Rented (Website IQ),Oporto Airport
+CH-16-ZJ,Available,Oporto Airport
+CF-43-AG,Rented (XML AutoUnion),Faro Airport
+CF-99-AF,Rented (XML AutoUnion),Lisbon Airport
+CG-69-DS,Available,Oporto Airport
+CF-46-AG,Non Revenue (Consignação/outros),Lisbon Airport
+CF-50-AG,Available,Lisbon Airport
+CF-55-AF,Rented,Lisbon Airport
+CF-38-AG,Available,Oporto Airport
+CG-76-DT,Rented,Lisbon Airport
+CF-85-AG,Available,Faro Airport
+CG-39-MV,Non Revenue (Consignação/outros),Lisbon Airport
+CF-91-AF,Available,Oporto Airport
+CF-92-AF,Rented (XML AutoUnion),Faro Airport
+CF-50-OL,Available,Lisbon Airport
+CF-19-OM,Rented (XML AutoUnion),Faro Airport
+CH-48-AQ,Available,Lisbon Airport
+CF-91-MG,Available,Lisbon Airport
+CF-02-OM,Available,Lisbon Airport
+CG-19-BJ,Available,Faro Airport
+CH-83-AQ,Available,Lisbon Airport
+CH-30-AQ,Rented (XML AutoUnion),Lisbon Airport
+CF-48-OL,Non Revenue (Empregado ),Lisbon Airport
+CF-02-OL,Available,Lisbon Airport
+CF-01-RB,Rented (XML AutoUnion),Faro Airport
+CF-12-RC,Rented (XML AutoUnion),Lisbon Airport
+CF-00-RA,Rented (XML AutoUnion),Oporto Airport
+CF-21-QC,Rented (XML AutoUnion),Lisbon Airport
+CF-73-RB,Rented (XML AutoUnion),Faro Airport
+CF-75-QB,Available,Lisbon Airport
+CF-05-QC,Rented (XML AutoUnion),Lisbon Airport
+CF-16-QC,Rented (XML AutoUnion),Lisbon Airport
+CF-19-QC,Rented (XML AutoUnion),Faro Airport
+CF-47-QC,Rented (XML AutoUnion),Faro Airport
+CF-64-RB,Rented (XML AutoUnion),Faro Airport
+CF-65-RB,Rented (XML AutoUnion),Faro Airport
+CF-74-QC,Rented (XML AutoUnion),Lisbon Airport
+CF-91-RA,Rented (XML AutoUnion),Lisbon Airport
+CF-17-QC,Available,Faro Airport
+CF-21-QZ,Available,Lisbon Airport
+CF-29-QC,Available,Faro Airport
+CF-32-QC,Rented (Walk-in),Faro Airport
+CF-92-QB,Rented (XML AutoUnion),Faro Airport
+CF-88-QB,Rented (XML AutoUnion),Lisbon Airport
+CG-57-QJ,Rented (XML AutoUnion),Faro Airport
+CG-78-QI,Available,Faro Airport
+CG-89-QI,Rented (XML AutoUnion),Lisbon Airport
+CG-48-QI,Available,Lisbon Airport
+CG-40-QI,Rented (XML AutoUnion),Lisbon Airport
+CG-15-QI,Rented (XML AutoUnion),Oporto Airport
+CG-29-QJ,Rented (XML AutoUnion),Oporto Airport
+CH-75-CC,Rented (XML AutoUnion),Oporto Airport
+CG-73-QI,Rented (XML AutoUnion),Faro Airport
+CG-43-QJ,Rented (XML AutoUnion),Lisbon Airport
+CG-56-QH,Available,Faro Airport
+CG-07-QJ,Non Revenue (Manutenção),Lisbon Airport
+CG-38-QI,Available,Oporto Airport
+CG-54-QI,Rented (XML AutoUnion),Oporto Airport
+CG-82-QJ,Rented (XML AutoUnion),Oporto Airport
+BU-74-BX,Rented (XML AutoUnion),Lisbon Airport
+BU-77-BZ,Non Revenue (Manutenção),Oporto Airport
+BU-55-BZ,Available,Faro Airport
+BU-13-BZ,Rented (XML AutoUnion),Lisbon Airport
+BU-78-CB,Non Revenue (Manutenção),Lisbon Airport
+BU-86-BX,Rented,Lisbon Airport
+BU-41-BX,Non Revenue (Venda/Devolução),Faro Airport
+BU-38-CB,Rented (XML AutoUnion),Faro Airport
+BU-40-CC,Rented (XML AutoUnion),Oporto Airport
+BU-17-CB,Rented (XML AutoUnion),Faro Airport
+BU-33-BX,Rented (XML AutoUnion),Lisbon Airport
+CF-63-SF,Non Revenue (Station Movement),Oporto Airport
+CF-37-SF,Available,Faro Airport
+BS-16-JQ,Rented,Lisbon Airport
+BS-36-JP,Available,Lisbon Airport
+BS-52-JQ,Rented (XML AutoUnion),Oporto Airport
+BS-84-QB,Rented (XML AutoUnion),Faro Airport
+BS-59-JQ,Rented,Lisbon Airport
+BS-60-QA,Available,Oporto Airport
+BS-10-QB,Available,Lisbon Airport
+BS-38-QB,Non Revenue (Avaria/Garantia),Lisbon Airport
+BS-54-JQ,Available,Faro Airport
+BS-06-JP,Rented (XML AutoUnion),Oporto Airport
+BS-36-JQ,Rented (XML AutoUnion),Lisbon Airport
+BS-80-JP,Rented (XML AutoUnion),Faro Airport
+BS-65-JQ,Non Revenue (Pneus ),Lisbon Airport
+BS-59-JP,Non Revenue (Avaria/Garantia),Lisbon Airport
+BS-24-QB,Rented (XML AutoUnion),Faro Airport
+CF-25-SD,Rented (XML AutoUnion),Faro Airport
+CF-95-TH,Rented (XML AutoUnion),Faro Airport
+CF-68-SB,Rented (XML AutoUnion),Oporto Airport
+CF-08-SF,Available,Faro Airport
+CF-97-SB,Rented (XML AutoUnion),Faro Airport
+CF-72-SF,Available,Oporto Airport
+CF-27-TJ,Available,Oporto Airport
+CF-22-SB,Rented (XML AutoUnion),Lisbon Airport
+CF-63-SC,Rented (XML AutoUnion),Lisbon Airport
+CF-48-SB,Rented (XML AutoUnion),Faro Airport
+CF-65-SE,Rented (XML AutoUnion),Oporto Airport
+CF-54-SF,Available,Faro Airport
+CF-80-SB,Rented (XML AutoUnion),Faro Airport
+CF-23-SE,Rented,Lisbon Airport
+CF-55-SF,Rented (XML AutoUnion),Lisbon Airport
+CH-01-EC,Non Revenue (Manutenção),Lisbon Airport
+CG-89-ZA,Rented (XML AutoUnion),Lisbon Airport
+CH-77-EZ,Rented (XML AutoUnion),Faro Airport
+CH-09-ZJ,Rented (XML AutoUnion),Lisbon Airport
+CJ-41-PU,Rented,Lisbon Airport
+CJ-99-PT,Non Revenue (Consignação/outros),Lisbon Airport
+CJ-29-PU,Rented (PhoneCall),Lisbon Airport
+BR-34-XJ,Non Revenue (Station Movement),Lisbon Airport
+BR-08-XJ,Non Revenue (Station Movement),Lisbon Airport
+BS-39-LJ,Defleeted,Lisbon Airport
+BS-69-LM,Non Revenue (Station Movement),Faro Airport
+BS-13-LL,Non Revenue (Manutenção),Lisbon Airport
+BS-64-LM,Rented (XML AutoUnion),Lisbon Airport
+BS-27-IZ,Available,Lisbon Airport
+BS-44-SF,Rented (XML AutoUnion),Oporto Airport
+BS-22-MG,Rented (XML AutoUnion),Oporto Airport
+BV-77-CA,Available,Lisbon Airport
+BV-67-HC,Rented (XML AutoUnion),Faro Airport
+BV-63-HC,Rented (Website IQ),Oporto Airport
+BV-91-HC,Rented (XML AutoUnion),Oporto Airport
+CL-57-BV,Rented (XML AutoUnion),Lisbon Airport
+CH-33-ZJ,Rented,Lisbon Airport
+CH-68-ZI,Available,Oporto Airport
+CH-28-ZJ,Rented (XML AutoUnion),Lisbon Airport
+BJ-78-ZP,Rented,Lisbon Airport
+BN-34-GR,Rented,Lisbon Airport
+BT-42-XV,Available,Oporto Airport
+BT-62-XX,Available,Lisbon Airport
+BT-56-ZA,Available,Faro Airport
+BV-42-AG,Available,Faro Airport
+BV-74-AG,Rented,Lisbon Airport
+BV-24-AG,Non Revenue (Manutenção),Lisbon Airport
+BU-37-XQ,Available,Lisbon Airport
+BZ-27-GT,Available,Oporto Airport
+BZ-90-GD,Available,Lisbon Airport
+BX-20-TV,Rented (XML AutoUnion),Oporto Airport
+BX-67-SD,Rented (XML AutoUnion),Faro Airport
+BS-52-MH,Available,Oporto Airport
+BS-45-MI,Available,Lisbon Airport
+BS-60-MH,Non Revenue (Administração),Lisbon Airport
+BS-17-MH,Available,Oporto Airport
+BS-53-MG,Rented (XML AutoUnion),Lisbon Airport
+CE-44-NQ,Available,Lisbon Airport
+CE-25-NQ,Available,Lisbon Airport
+CE-02-BL,Rented (XML AutoUnion),Lisbon Airport
+CE-91-BJ,Rented,Lisbon Airport
+CG-08-BM,Available,Lisbon Airport
+CG-62-BJ,Rented (XML AutoUnion),Lisbon Airport
+CG-06-BM,Rented (XML AutoUnion),Lisbon Airport
+CG-27-BJ,Rented (XML AutoUnion),Lisbon Airport
+CG-68-BI,Available,Faro Airport
+CG-85-BI,Available,Faro Airport
+CG-16-BM,Non Revenue (Empregado ),Oporto Airport
+CG-15-BJ,Available,Oporto Airport
+CE-42-LC,Non Revenue (Colisão),Oporto Airport
+CF-05-GG,Available,Faro Airport
+CF-53-GG,Available,Oporto Airport
+CF-44-GF,Available,Faro Airport
+CF-43-GF,Available,Lisbon Airport
+CF-70-GG,Rented (XML AutoUnion),Faro Airport
+CG-08-DS,Rented (XML AutoUnion),Faro Airport
+CG-31-BL,Rented (XML AutoUnion),Oporto Airport
+CG-92-BJ,Rented (XML AutoUnion),Lisbon Airport
+CG-92-BL,Rented (XML AutoUnion),Oporto Airport
+CG-84-BI,Rented (XML AutoUnion),Lisbon Airport
+CG-87-BI,Rented (XML AutoUnion),Lisbon Airport
+CG-75-BL,Rented (XML AutoUnion),Lisbon Airport
+CG-74-BL,Rented (XML AutoUnion),Oporto Airport
+CG-26-BL,Rented,Oporto Airport
+CG-52-BL,Rented (XML AutoUnion),Faro Airport
+CG-52-BJ,Available,Oporto Airport
+CG-18-BM,Rented (XML AutoUnion),Lisbon Airport
+CG-53-BI,Rented (XML AutoUnion),Lisbon Airport
+CG-73-BL,Rented (XML AutoUnion),Lisbon Airport
+CG-49-BI,Rented (XML AutoUnion),Oporto Airport
+CF-44-QZ,Rented (XML AutoUnion),Lisbon Airport
+CF-69-RA,Rented (XML AutoUnion),Lisbon Airport
+CF-97-QZ,Rented (XML AutoUnion),Lisbon Airport
+CF-79-RB,Rented (XML AutoUnion),Oporto Airport
+CJ-60-IE,Available,Faro Airport
+CJ-69-IE,Rented (XML AutoUnion),Faro Airport
+CJ-25-ID,Rented (XML AutoUnion),Faro Airport
+CF-78-RB,Available,Lisbon Airport
+CF-50-RA,Rented (XML AutoUnion),Faro Airport
+CF-61-RC,Available,Faro Airport
+CF-31-RA,Rented (XML AutoUnion),Oporto Airport
+CJ-50-IE,Rented (XML AutoUnion),Faro Airport
+CJ-51-IE,Rented (XML AutoUnion),Faro Airport
+CJ-43-IE,Rented (XML AutoUnion),Faro Airport
+CJ-55-ID,Rented (XML AutoUnion),Faro Airport
+CJ-19-ID,Rented (XML AutoUnion),Faro Airport
+CF-91-RC,Rented (XML AutoUnion),Oporto Airport
+CF-96-RA,Rented (XML AutoUnion),Lisbon Airport
+CF-43-QZ,Non Revenue (Manutenção),Faro Airport
+CF-85-RB,Rented (XML AutoUnion),Faro Airport
+CF-68-RA,Rented (XML AutoUnion),Oporto Airport
+CF-38-RA,Rented (XML AutoUnion),Lisbon Airport
+CF-13-QZ,Rented (XML AutoUnion),Faro Airport
+CF-33-RC,Rented (XML AutoUnion),Faro Airport
+CH-06-FQ,Rented (XML AutoUnion),Faro Airport
+CH-55-FQ,Available,Oporto Airport
+CH-89-FQ,Rented (XML AutoUnion),Faro Airport
+CH-66-FQ,Non Revenue (Manutenção),Oporto Airport
+CH-49-FQ,Rented (XML AutoUnion),Faro Airport
+CH-74-FQ,Rented (XML AutoUnion),Oporto Airport
+CH-42-FQ,Available,Lisbon Airport
+CH-15-FR,Available,Lisbon Airport
+CH-75-FQ,Rented (XML AutoUnion),Faro Airport
+CH-85-FP,Available,Lisbon Airport
+CH-45-FQ,Rented (XML AutoUnion),Lisbon Airport
+CH-31-FQ,Rented (XML AutoUnion),Oporto Airport
+CH-67-MX,Rented (XML AutoUnion),Faro Airport
+CH-04-MX,Rented (XML AutoUnion),Oporto Airport
+CH-91-MU,Rented (XML AutoUnion),Oporto Airport
+CH-56-MX,Rented (XML AutoUnion),Oporto Airport
+CH-21-MX,Rented (XML AutoUnion),Lisbon Airport
+CH-30-MT,Rented (XML AutoUnion),Oporto Airport
+CH-41-MV,Rented (XML AutoUnion),Faro Airport
+CH-74-MT,Rented (XML AutoUnion),Oporto Airport
+CH-42-MU,Rented,Oporto Airport
+CH-10-MT,Rented (XML AutoUnion),Faro Airport
+CH-86-MZ,Rented (XML AutoUnion),Oporto Airport
+CH-59-MZ,Rented (XML AutoUnion),Faro Airport
+CH-41-MT,Non Revenue (Station Movement),Oporto Airport
+CH-32-MU,Rented (XML AutoUnion),Oporto Airport
+CH-41-MU,Non Revenue (Station Movement),Oporto Airport
+CH-91-MX,Rented,Lisbon Airport
+CH-69-MV,Rented (XML AutoUnion),Faro Airport
+CH-36-MU,Rented,Oporto Airport
+CH-31-MZ,Rented (XML AutoUnion),Faro Airport
+CJ-52-IE,Rented (XML AutoUnion),Lisbon Airport
+CJ-75-ID,Rented (XML AutoUnion),Faro Airport
+CJ-72-ID,Rented (XML AutoUnion),Lisbon Airport
+CH-86-FP,Rented (XML AutoUnion),Lisbon Airport
+CH-08-FR,Rented (XML AutoUnion),Faro Airport
+CH-73-FQ,Rented (XML AutoUnion),Faro Airport
+CH-64-FQ,Rented (XML AutoUnion),Faro Airport
+CH-16-FQ,Rented (XML AutoUnion),Oporto Airport
+CH-03-FR,Rented (XML AutoUnion),Oporto Airport
+CH-86-FQ,Rented (XML AutoUnion),Faro Airport
+CH-36-FQ,Available,Faro Airport
+CH-96-FP,Rented (XML AutoUnion),Faro Airport
+CH-05-FR,Rented (XML AutoUnion),Faro Airport
+CH-90-FQ,Rented (XML AutoUnion),Faro Airport
+CH-32-FQ,Rented (XML AutoUnion),Faro Airport
+CH-17-FR,Rented (XML AutoUnion),Oporto Airport
+CH-98-FP,Non Revenue (Consignação/outros),Lisbon Airport
+CH-88-FQ,Rented (XML AutoUnion),Faro Airport
+CH-00-FR,Rented (XML AutoUnion),Oporto Airport
+CH-98-FQ,Available,Oporto Airport
+CH-29-MX,Available,Lisbon Airport
+CH-11-MV,Rented (XML AutoUnion),Faro Airport
+CH-28-MX,Rented (XML AutoUnion),Faro Airport
+CH-17-MX,Available,Oporto Airport
+CH-68-MU,Rented,Lisbon Airport
+CH-58-MU,Available,Lisbon Airport
+CH-84-MV,Rented (XML AutoUnion),Faro Airport
+CH-35-MX,Rented,Oporto Airport
+CH-17-MV,Rented (XML AutoUnion),Oporto Airport
+CH-26-MU,Rented (XML AutoUnion),Oporto Airport
+CH-47-MX,Rented (XML AutoUnion),Lisbon Airport
+CH-48-MV,Available,Oporto Airport
+CH-73-MX,Available,Oporto Airport
+CH-82-MZ,Rented (XML AutoUnion),Lisbon Airport
+CH-66-MX,Rented (XML AutoUnion),Lisbon Airport
+CH-52-MT,Available,Oporto Airport
+CH-62-MX,Rented (XML AutoUnion),Faro Airport
+CH-17-MZ,Non Revenue (Quebra de Vidros ),Oporto Airport
+CH-86-MX,Rented (XML AutoUnion),Oporto Airport
+CH-12-MU,Rented,Lisbon Airport
+CH-67-MT,Rented (XML AutoUnion),Lisbon Airport
+CH-87-MX,Rented (XML AutoUnion),Lisbon Airport
+CH-25-MU,Rented (XML AutoUnion),Faro Airport
+CH-57-MU,Rented (XML AutoUnion),Lisbon Airport
+CH-90-MZ,Rented (XML AutoUnion),Lisbon Airport
+CH-85-MU,Rented (XML AutoUnion),Faro Airport
+CH-44-MV,Available,Lisbon Airport
+CH-24-MV,Rented (XML AutoUnion),Oporto Airport
+CH-14-MU,Rented (XML AutoUnion),Oporto Airport
+CH-27-MT,Available,Lisbon Airport
+CH-60-MZ,Available,Faro Airport
+CH-47-MT,Rented (XML AutoUnion),Lisbon Airport
+CH-96-MT,Rented,Oporto Airport
+CH-63-MX,Rented (XML AutoUnion),Faro Airport
+CH-69-MX,Rented (XML AutoUnion),Lisbon Airport
+CH-14-MZ,Rented (XML AutoUnion),Lisbon Airport
+CH-99-MV,Rented (XML AutoUnion),Faro Airport
+CH-69-MU,Rented (XML AutoUnion),Oporto Airport
+CH-07-MX,Rented (XML AutoUnion),Lisbon Airport
+CH-91-MV,Rented (XML AutoUnion),Lisbon Airport
+CH-16-MU,Rented (XML AutoUnion),Faro Airport
+CJ-71-IE,Rented (XML AutoUnion),Lisbon Airport
+CJ-24-IE,Available,Lisbon Airport
+CJ-42-ID,Available,Oporto Airport
+CJ-66-IE,Rented (XML AutoUnion),Oporto Airport
+CJ-98-ID,Rented (XML AutoUnion),Lisbon Airport
+CJ-86-IE,Rented (XML AutoUnion),Faro Airport
+CJ-27-ID,Available,Lisbon Airport
+CJ-52-ID,Rented (XML AutoUnion),Lisbon Airport
+CH-03-FQ,Rented (XML AutoUnion),Faro Airport
+CH-93-FQ,Rented (XML AutoUnion),Lisbon Airport
+CH-94-FP,Rented (XML AutoUnion),Oporto Airport
+CH-91-FQ,Rented (XML AutoUnion),Lisbon Airport
+CH-10-FR,Rented (XML AutoUnion),Lisbon Airport
+CH-95-FP,Rented (XML AutoUnion),Faro Airport
+CJ-79-IE,Available,Lisbon Airport
+CG-54-BL,Non Revenue (Avaria/Garantia),Faro Airport
+CH-06-ZJ,Non Revenue (Empregado ),Lisbon Airport
+CH-83-ZI,Non Revenue (Administração),Lisbon Airport
+CH-88-ZI,Non Revenue (Administração),Lisbon Airport
+CI-08-QL,Rented (XML AutoUnion),Lisbon Airport
+CI-91-QJ,Available,Lisbon Airport
+CI-51-QJ,Rented (XML AutoUnion),Oporto Airport
+CI-45-XJ,Available,Faro Airport
+CI-47-XP,Rented (XML AutoUnion),Lisbon Airport
+CI-63-XP,Rented (XML AutoUnion),Oporto Airport
+CI-12-XP,Available,Oporto Airport
+CI-53-QJ,Available,Oporto Airport
+CI-11-XN,Rented (XML AutoUnion),Faro Airport
+CI-70-XM,Rented (XML AutoUnion),Oporto Airport
+CI-86-XL,Rented (XML AutoUnion),Faro Airport
+CI-49-XM,Rented (XML AutoUnion),Faro Airport
+CI-69-XM,Available,Faro Airport
+CI-05-QL,Rented (XML AutoUnion),Oporto Airport
+CI-93-XL,Available,Oporto Airport
+CI-84-XJ,Rented (XML AutoUnion),Oporto Airport
+CI-74-QH,Rented (XML AutoUnion),Lisbon Airport
+CI-71-QH,Rented (XML AutoUnion),Lisbon Airport
+CI-28-QJ,Rented (XML AutoUnion),Lisbon Airport
+CI-57-QH,Rented,Lisbon Airport
+CI-99-QH,Rented (XML AutoUnion),Lisbon Airport
+CI-88-QG,Rented (XML AutoUnion),Oporto Airport
+CI-85-QH,Available,Faro Airport
+CI-02-XP,Available,Lisbon Airport
+CI-34-XL,Rented (XML AutoUnion),Oporto Airport
+CI-86-XJ,Rented (XML AutoUnion),Faro Airport
+CI-44-XJ,Rented (XML AutoUnion),Oporto Airport
+CI-84-XM,Rented (XML AutoUnion),Oporto Airport
+CI-40-XL,Rented (XML AutoUnion),Faro Airport
+CI-02-XL,Rented (XML AutoUnion),Lisbon Airport
+CI-81-XN,Rented (XML AutoUnion),Oporto Airport
+CI-44-QJ,Available,Lisbon Airport
+CI-29-QH,Rented (XML AutoUnion),Oporto Airport
+CI-96-QG,Rented,Lisbon Airport
+CI-22-QJ,Rented (XML AutoUnion),Lisbon Airport
+CI-40-QJ,Rented (Website IQ),Oporto Airport
+CI-55-QH,Rented (XML AutoUnion),Oporto Airport
+CI-72-QJ,Rented (XML AutoUnion),Lisbon Airport
+CI-03-XL,Rented (XML AutoUnion),Oporto Airport
+CI-44-TJ,Available,Lisbon Airport
+CI-36-QJ,Available,Faro Airport
+CI-66-OT,Rented (XML AutoUnion),Lisbon Airport
+CI-63-OV,Rented (XML AutoUnion),Lisbon Airport
+CI-78-OR,Rented (XML AutoUnion),Lisbon Airport
+CI-56-OV,Rented (XML AutoUnion),Lisbon Airport
+CI-05-OT,Rented (XML AutoUnion),Faro Airport
+CI-98-OV,Available,Oporto Airport
+CI-08-OR,Rented (XML AutoUnion),Faro Airport
+CI-39-OS,Rented (XML AutoUnion),Faro Airport
+CI-50-OS,Rented (XML AutoUnion),Oporto Airport
+CI-31-OT,Rented (XML AutoUnion),Oporto Airport
+CI-65-OR,Rented (XML AutoUnion),Oporto Airport
+CI-46-OR,Rented (XML AutoUnion),Lisbon Airport
+CI-27-OR,Rented (XML AutoUnion),Oporto Airport
+CI-57-OS,Rented (XML AutoUnion),Faro Airport
+CI-69-OV,Rented (XML AutoUnion),Oporto Airport
+CI-51-OR,Rented (XML AutoUnion),Oporto Airport
+CI-69-OR,Rented (XML AutoUnion),Faro Airport
+CI-68-OT,Rented (XML AutoUnion),Faro Airport
+CI-31-OS,Rented (XML AutoUnion),Oporto Airport
+CI-16-OV,Rented (XML AutoUnion),Faro Airport
+CI-12-OV,Available,Oporto Airport
+CI-09-OT,Rented (XML AutoUnion),Oporto Airport
+CI-41-OV,Available,Faro Airport
+CI-82-OT,Rented (XML AutoUnion),Oporto Airport
+CI-95-OT,Rented (XML AutoUnion),Oporto Airport
+CJ-82-IE,Rented (XML AutoUnion),Lisbon Airport
+CJ-73-ID,Rented (XML AutoUnion),Lisbon Airport
+CJ-46-ID,Available,Oporto Airport
+CJ-33-ID,Rented (XML AutoUnion),Faro Airport
+CJ-12-IE,Rented (XML AutoUnion),Lisbon Airport
+CJ-29-ID,Rented (XML AutoUnion),Faro Airport
+CJ-47-ID,Available,Lisbon Airport
+CJ-75-IE,Rented (XML AutoUnion),Lisbon Airport
+CJ-63-IE,Rented (XML AutoUnion),Lisbon Airport
+CJ-80-IE,Rented (XML AutoUnion),Lisbon Airport
+CJ-40-IE,Rented (XML AutoUnion),Lisbon Airport
+CJ-76-IE,Rented (XML AutoUnion),Lisbon Airport
+CJ-11-IE,Rented (XML AutoUnion),Oporto Airport
+CJ-56-ID,Available,Lisbon Airport
+CJ-28-IE,Rented (XML AutoUnion),Lisbon Airport
+BT-10-AM,Rented (XML AutoUnion),Lisbon Airport
+CH-76-MX,Rented (XML AutoUnion),Faro Airport
+CI-06-OT,Available,Oporto Airport
+CI-42-OR,Available,Lisbon Airport
+CI-54-OR,Rented (XML AutoUnion),Lisbon Airport
+CI-02-OX,Rented (XML AutoUnion),Lisbon Airport
+CI-89-OR,Available,Faro Airport
+CI-64-OS,Rented (XML AutoUnion),Lisbon Airport
+CI-47-OR,Available,Lisbon Airport
+CI-13-OV,Rented (XML AutoUnion),Lisbon Airport
+CI-84-OT,Rented (XML AutoUnion),Lisbon Airport
+CI-39-OT,Rented (XML AutoUnion),Lisbon Airport
+CI-57-OV,Rented (XML AutoUnion),Faro Airport
+CI-19-OV,Rented (XML AutoUnion),Lisbon Airport
+CI-73-OS,Rented (XML AutoUnion),Oporto Airport
+CI-34-OT,Rented (XML AutoUnion),Lisbon Airport
+CI-42-OV,Rented (XML AutoUnion),Faro Airport
+CI-96-OR,Rented (XML AutoUnion),Oporto Airport
+CI-39-OV,Rented (XML AutoUnion),Lisbon Airport
+CI-07-OV,Rented (XML AutoUnion),Lisbon Airport
+CI-94-OV,Available,Lisbon Airport
+CI-24-OS,Rented (XML AutoUnion),Lisbon Airport
+CI-99-OV,Available,Lisbon Airport
+CI-12-OR,Rented (XML AutoUnion),Faro Airport
+CI-27-OT,Available,Lisbon Airport
+CI-84-OR,Rented (XML AutoUnion),Lisbon Airport
+CI-44-OT,Rented (XML AutoUnion),Lisbon Airport
+CI-05-OR,Rented (XML AutoUnion),Lisbon Airport
+CI-77-OR,Rented (XML AutoUnion),Oporto Airport
+CI-67-OT,Rented (XML AutoUnion),Faro Airport
+CI-37-OR,Rented (XML AutoUnion),Faro Airport
+CI-36-OS,Available,Lisbon Airport
+CI-10-OR,Rented (XML AutoUnion),Oporto Airport
+CI-82-OS,Rented (XML AutoUnion),Oporto Airport
+CI-60-OV,Rented (XML AutoUnion),Oporto Airport
+CI-88-OS,Rented,Lisbon Airport
+CI-08-OV,Rented (XML AutoUnion),Faro Airport
+CI-49-OT,Rented (XML AutoUnion),Oporto Airport
+CI-17-OR,Rented (XML AutoUnion),Oporto Airport
+CI-80-OT,Rented (XML AutoUnion),Lisbon Airport
+CI-77-OV,Rented (XML AutoUnion),Faro Airport
+CI-00-OS,Rented (XML AutoUnion),Oporto Airport
+CI-40-OS,Rented (XML AutoUnion),Oporto Airport
+CI-05-OS,Rented (XML AutoUnion),Faro Airport
+CI-95-OR,Rented (XML AutoUnion),Oporto Airport
+CI-15-OT,Rented (XML AutoUnion),Oporto Airport
+CI-91-OT,Rented (XML AutoUnion),Oporto Airport
+CI-94-OR,Rented (XML AutoUnion),Oporto Airport
+CI-38-OT,Rented (XML AutoUnion),Faro Airport
+CI-00-OR,Rented (XML AutoUnion),Lisbon Airport
+CI-97-OV,Rented,Lisbon Airport
+CI-23-OT,Rented (XML AutoUnion),Lisbon Airport
+CI-53-OR,Rented (XML AutoUnion),Oporto Airport
+CI-02-OV,Rented (XML AutoUnion),Lisbon Airport
+CI-50-OT,Rented (XML AutoUnion),Faro Airport
+CI-13-OR,Non Revenue (Colisão),Oporto Airport
+CI-97-OQ,Rented (XML AutoUnion),Oporto Airport
+CI-14-OT,Rented (XML AutoUnion),Oporto Airport
+CI-88-OT,Non Revenue (Avaria),Oporto Airport
+CI-37-OT,Rented (XML AutoUnion),Oporto Airport
+CI-52-OS,Rented (XML AutoUnion),Faro Airport
+CI-25-OS,Rented (XML AutoUnion),Oporto Airport
+CI-62-OV,Non Revenue (Consignação/outros),Oporto Airport
+CI-72-OT,Available,Oporto Airport
+CI-46-OV,Rented,Oporto Airport
+CI-16-OS,Rented (XML AutoUnion),Oporto Airport
+CI-28-OT,Rented (XML AutoUnion),Faro Airport
+CI-61-OT,Rented (XML AutoUnion),Lisbon Airport
+CI-09-OV,Rented,Lisbon Airport
+CI-67-OS,Non Revenue (Quebra de Vidros ),Lisbon Airport
+CI-63-OR,Rented (XML AutoUnion),Lisbon Airport
+CI-23-OR,Rented (XML AutoUnion),Oporto Airport
+CI-24-OR,Available,Oporto Airport
+CI-67-OV,Rented (XML AutoUnion),Oporto Airport
+CI-79-OR,Rented,Lisbon Airport
+CI-91-OR,Rented (XML AutoUnion),Lisbon Airport
+CI-07-OR,Rented (XML AutoUnion),Faro Airport
+CI-55-OV,Rented (XML AutoUnion),Lisbon Airport
+CI-32-OT,Rented,Oporto Airport
+CJ-25-IE,Rented (XML AutoUnion),Lisbon Airport
+CI-25-OV,Rented (XML AutoUnion),Oporto Airport
+CH-09-FQ,Available,Oporto Airport
+CH-63-FQ,Rented (XML AutoUnion),Oporto Airport
+CH-04-FR,Rented (XML AutoUnion),Oporto Airport
+CH-99-FQ,Rented (XML AutoUnion),Oporto Airport
+CI-53-OT,Rented (XML AutoUnion),Lisbon Airport
+BZ-73-VT,Rented (XML AutoUnion),Lisbon Airport
+BZ-37-ZC,Non Revenue (Manutenção),Lisbon Airport
+BZ-02-VT,Available,Oporto Airport
+BZ-95-VT,Rented (XML AutoUnion),Lisbon Airport
+BZ-95-VS,Available,Lisbon Airport
+BZ-29-VT,Available,Lisbon Airport
+BZ-05-VT,Available,Lisbon Airport
+BZ-33-ZC,Non Revenue (Administração),Lisbon Airport
+BZ-16-ZC,Available,Lisbon Airport
+BZ-51-VT,Rented,Lisbon Airport
+CI-06-TM,Non Revenue (Colisão),Lisbon Airport
+CI-55-TN,Rented,Lisbon Airport
+CI-54-TM,Available,Oporto Airport
+CI-66-TM,Available,Lisbon Airport
+CI-38-TN,Rented,Lisbon Airport
+BZ-15-VT,Available,Lisbon Airport
+BZ-57-VT,Available,Lisbon Airport
+BZ-72-VT,Available,Lisbon Airport
+BZ-99-VS,Available,Lisbon Airport
+BZ-18-VT,Available,Oporto Airport
+BZ-35-VT,Available,Lisbon Airport
+BZ-99-VT,Available,Faro Airport
+BZ-75-VT,Available,Lisbon Airport
+BZ-66-VS,Available,Lisbon Airport
+BZ-82-VT,Available,Lisbon Airport
+CA-63-RZ,Available,Lisbon Airport
+CA-96-RC,Available,Lisbon Airport
+CA-10-RD,Available,Lisbon Airport
+CA-45-RC,Available,Lisbon Airport
+CA-86-RC,Rented (XML AutoUnion),Lisbon Airport
+BT-88-EN,Non Revenue (Shuttle service),Faro Airport
+BT-71-HJ,Non Revenue (Shuttle service),Oporto Airport
