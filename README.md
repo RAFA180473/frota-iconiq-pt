@@ -3,7 +3,7 @@
 Dashboard da frota ativa ICONIQ PT (Auto Union), alojado no GitHub Pages.
 
 - `index.html` — o dashboard (abre `data/frota_iconiq.json`).
-- `data/frota_base.json` — lista master das viaturas (folha "dashboard a cosntruir " do ficheiro OpMargin-Fleet ICONIQ PT, SharePoint FROTA/Defleet 26).
+- `data/frota_base.json` — lista master das viaturas por vender, com valores de venda da folha OP MARGIN (residual, +3%, COM IVA, margem, saída prevista) (folha "dashboard a cosntruir " do ficheiro OpMargin-Fleet ICONIQ PT, SharePoint FROTA/Defleet 26).
 - `data/wheelsys_latest.csv` — Localização e Situação de cada matrícula, do WheelSys (Vehicle List Report, date basis Today).
 - `data/frota_iconiq.json` — base + WheelSys, sem viaturas em defleet. É o que o dashboard mostra.
 - `scripts/merge_base.py` — `python3 -I scripts/merge_base.py data/frota_base.json data/wheelsys_latest.csv data/frota_iconiq.json`

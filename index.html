@@ -121,6 +121,12 @@
   .fx-tabs button[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
   .fx-tabs button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
   .fx-page { display: flex; flex-direction: column; gap: var(--cds-gap-lg); }
+  .fx-tabs { display: flex; gap: var(--cds-gap-lg); border-bottom: 1px solid var(--color-border-line); }
+  .fx-tabs button { font: inherit; font-size: var(--cds-font-size-body); background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-sm) 0; color: var(--color-fg-muted); cursor: pointer; margin-bottom: -1px; }
+  .fx-tabs button[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .fx-tabs button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+  .fx-page { display: flex; flex-direction: column; gap: var(--cds-gap-lg); }
+  #v-warn { color: var(--color-warn); }
   [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
   [data-dash-source-state=empty] { color: transparent; }
   .fx-fail { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: inherit; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
@@ -131,11 +137,83 @@
   <header class="fx-head" id="topo">
     <div>
       <h1>Frota ICONIQ PT</h1>
-      <p class="fx-take dash-skeleton" id="takeaway" data-source="kpi_loc">—</p>
+      <p class="fx-take">Viaturas por vender, valores de venda e situação da frota.</p>
     </div>
     <div class="fx-seg" id="locseg" role="group" aria-label="Localização"></div>
   </header>
 
+  <nav class="fx-tabs" role="tablist" aria-label="Páginas">
+    <button type="button" role="tab" id="tabbtn-vender" data-tab="vender" aria-selected="true">Viaturas por vender</button>
+    <button type="button" role="tab" id="tabbtn-frota" data-tab="frota" aria-selected="false">Frota ativa</button>
+  </nav>
+
+  <div class="fx-page" id="por-vender">
+    <p class="fx-take dash-skeleton" id="v-take" data-source="venda_kpi">—</p>
+    <section class="fx-kpis" id="v-kpis" aria-label="Indicadores de venda">
+      <div class="fx-kpi"><span class="lbl">Viaturas por vender</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="n">—</span><span class="sub">sem defleet</span></div>
+      <div class="fx-kpi"><span class="lbl">Valor de venda c/ IVA</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="comIVA">—</span><span class="sub">coluna COM IVA</span></div>
+      <div class="fx-kpi"><span class="lbl">Valor de venda s/ IVA</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="semIVA">—</span><span class="sub">residual + 3%</span></div>
+      <div class="fx-kpi"><span class="lbl">Valor residual</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="residual">—</span><span class="sub">compra − depreciação</span></div>
+      <div class="fx-kpi"><span class="lbl">Margem</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="margem">—</span><span class="sub">venda c/ IVA − residual × 1,23</span></div>
+      <div class="fx-kpi"><span class="lbl">Preço médio c/ IVA</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="medio">—</span><span class="sub">por viatura</span></div>
+    </section>
+    <p class="fx-note" id="v-warn" data-source="venda_kpi" data-field="semPreco" hidden></p>
+    <div class="fx-grid">
+      <section class="fx-card" id="saidas-mes">
+        <h2>Saídas previstas por mês</h2>
+        <p class="fx-note">Valor de venda c/ IVA pela data de saída prevista (Exit date).</p>
+        <div class="fx-chart" id="ch-vmes" data-source="venda_mes"></div>
+      </section>
+      <section class="fx-card" id="venda-marca">
+        <h2>Valor de venda por marca</h2>
+        <p class="fx-note">Valor c/ IVA das viaturas por vender.</p>
+        <div class="fx-chart" id="ch-vmarca" data-source="venda_marca"></div>
+      </section>
+    </div>
+    <div class="fx-grid">
+      <section class="fx-card" id="venda-ownership">
+        <h2>Por tipo de contrato</h2>
+        <p class="fx-note">Leased, Buy-back e Owned: valor c/ IVA.</p>
+        <div class="fx-chart" id="ch-vown" data-source="venda_owner"></div>
+      </section>
+      <section class="fx-card" id="venda-leasing">
+        <h2>Por entidade financiadora</h2>
+        <p class="fx-note">Leasing company: valor c/ IVA.</p>
+        <div class="fx-chart" id="ch-vlea" data-source="venda_leasing"></div>
+      </section>
+    </div>
+    <section class="fx-card" id="lista-por-vender">
+      <h2>Viaturas por vender</h2>
+      <p class="fx-note">Valores da folha "dashboard" / OP MARGIN do ficheiro master. Localização e situação do WheelSys.</p>
+      <div class="fx-tools">
+        <input id="pq" type="search" placeholder="Procurar matrícula, modelo, marca…" aria-label="Procurar viaturas por vender">
+        <span class="fx-count" id="pcnt"></span>
+      </div>
+      <div class="fx-scroll">
+        <table class="fx-table" id="tb-pv" data-source="frota" data-row-key="Plate">
+          <thead><tr>
+            <th data-field="Plate"><button type="button">Matrícula</button></th>
+            <th data-field="Make"><button type="button">Marca</button></th>
+            <th data-field="Model"><button type="button">Modelo</button></th>
+            <th data-field="CarGroup"><button type="button">Grupo</button></th>
+            <th data-field="Ownership"><button type="button">Ownership</button></th>
+            <th class="num" data-field="Mileage"><button type="button">Km</button></th>
+            <th data-field="ExitDate"><button type="button">Saída prevista</button></th>
+            <th class="num" data-field="Residual"><button type="button">Residual</button></th>
+            <th class="num" data-field="PrecoSemIVA"><button type="button">Venda s/ IVA</button></th>
+            <th class="num" data-field="ValorComIVA"><button type="button">Venda c/ IVA</button></th>
+            <th class="num" data-field="Margem"><button type="button">Margem</button></th>
+            <th data-field="Localizacao"><button type="button">Localização</button></th>
+            <th data-field="Situacao"><button type="button">Situação</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div class="fx-page" id="frota-ativa" hidden>
+    <p class="fx-take dash-skeleton" id="takeaway" data-source="kpi_loc">—</p>
 
   <section class="fx-kpis" id="kpis" aria-label="Indicadores">
     <div class="fx-kpi"><span class="lbl">Viaturas ativas</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="total">—</span><span class="sub">sem defleet</span></div>
@@ -210,6 +288,7 @@
       </table>
     </div>
   </section>
+  </div>
 </div>
 
 <script>
@@ -306,6 +385,37 @@
     },
   });
 
+  const fxLocSets = (rows) => [['Todas', rows], ...['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].map((l) => [l, rows.filter((r) => r.Localizacao === l)])];
+  window.fxLocSets = fxLocSets;
+
+  dash.calc('venda_kpi', {
+    title: 'Totais por vender',
+    description: 'Viaturas por vender e soma dos valores de venda c/ IVA, s/ IVA, residual e margem, por aeroporto e no total.',
+    inputs: ['frota'],
+    fn: (frota) => [['Todas', frota], ...['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].map((l) => [l, frota.filter((r) => r.Localizacao === l)])].map(([loc, rs]) => {
+      const s = (k) => rs.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+      const comIVA = s('ValorComIVA');
+      return { Localizacao: loc, n: rs.length, comIVA, semIVA: s('PrecoSemIVA'), residual: s('Residual'), margem: s('Margem'),
+        medio: rs.length ? comIVA / rs.length : null, semPreco: rs.filter((r) => !(Number(r.Residual) > 0)).length };
+    }),
+  });
+
+  const fxGroupCalc = (id, key, title, description) => dash.calc(id, {
+    title, description, inputs: ['frota'],
+    fn: (frota) => {
+      const out = [];
+      [['Todas', frota], ...['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].map((l) => [l, frota.filter((r) => r.Localizacao === l)])].forEach(([loc, rs]) => {
+        const m = new Map();
+        rs.forEach((r) => { const k = r[key] || 'Sem informação'; const o = m.get(k) || { n: 0, comIVA: 0, margem: 0 }; o.n++; o.comIVA += Number(r.ValorComIVA) || 0; o.margem += Number(r.Margem) || 0; m.set(k, o); });
+        m.forEach((o, k) => out.push({ Localizacao: loc, [key]: k, ...o }));
+      });
+      return out;
+    },
+  });
+  fxGroupCalc('venda_mes', 'ExitMonth', 'Saídas previstas por mês', 'Viaturas e valor de venda c/ IVA por mês da data de saída prevista.');
+  fxGroupCalc('venda_marca', 'Make', 'Valor de venda por marca', 'Viaturas e valor de venda c/ IVA por marca.');
+  fxGroupCalc('venda_owner', 'Ownership', 'Por tipo de contrato', 'Viaturas e valor de venda c/ IVA por tipo de contrato (Leased, Buy-back, Owned).');
+  fxGroupCalc('venda_leasing', 'LeasingCompany', 'Por entidade financiadora', 'Viaturas e valor de venda c/ IVA por leasing company.');
 </script>
 
 <script>
@@ -457,12 +567,102 @@
       }));
     }
 
+    // Tabs
+    let tab = 'vender';
+    const showTab = (t, link) => {
+      tab = t;
+      document.querySelectorAll('.fx-tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+      document.getElementById('por-vender').hidden = t !== 'vender';
+      document.getElementById('frota-ativa').hidden = t !== 'frota';
+      if (link) dash.setLink(t === 'vender' ? 'por-vender' : 'frota-ativa');
+      redraw();
+    };
+    document.querySelectorAll('.fx-tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab, true)));
+
+    const fEur0 = (v) => v == null ? '' : new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v);
+    const fEurC = (v) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', notation: 'compact', maximumFractionDigits: 2 }).format(v);
+    let pRows = [], pSortKey = 'ExitDate', pSortDir = 1;
+    const ptb = document.getElementById('tb-pv');
+    function drawPvTable() {
+      const loc = curLoc();
+      const q = document.getElementById('pq').value.trim().toLowerCase();
+      let rows = pRows.filter((r) => loc === 'Todas' || r.Localizacao === loc);
+      if (q) rows = rows.filter((r) => [r.Plate, r.Make, r.Model, r.CarGroup, r.Ownership, r.LeasingCompany].join(' ').toLowerCase().includes(q));
+      const num = ['Mileage', 'Residual', 'PrecoSemIVA', 'ValorComIVA', 'Margem'].includes(pSortKey);
+      rows.sort((a, b) => {
+        if (num) return ((Number(a[pSortKey]) || 0) - (Number(b[pSortKey]) || 0)) * pSortDir;
+        const x = a[pSortKey] ?? '', y = b[pSortKey] ?? '';
+        if (x === '' && y !== '') return 1; if (y === '' && x !== '') return -1;
+        return String(x).localeCompare(String(y), 'pt') * pSortDir;
+      });
+      ptb.querySelectorAll('th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === pSortKey ? (pSortDir > 0 ? 'ascending' : 'descending') : 'none'));
+      ptb.querySelector('tbody').replaceChildren(...rows.map((r) => {
+        const tr = document.createElement('tr');
+        [[r.Plate], [r.Make], [r.Model, 'wrap'], [r.CarGroup], [r.Ownership], [r.Mileage == null ? '' : fKm(r.Mileage), 'num'],
+          [r.ExitDate ? d3.utcFormat('%d/%m/%Y')(new Date(r.ExitDate)) : ''], [fEur0(r.Residual), 'num'], [fEur0(r.PrecoSemIVA), 'num'],
+          [fEur0(r.ValorComIVA), 'num'], [fEur0(r.Margem), 'num'], [r.Localizacao]]
+          .forEach(([v, cls]) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = v ?? ''; tr.appendChild(td); });
+        const td = document.createElement('td'); const p = document.createElement('span'); p.className = 'fx-pill'; p.textContent = r.Situacao; p.style.borderColor = colOf(r.Estado); td.appendChild(p); tr.appendChild(td);
+        return tr;
+      }));
+      document.getElementById('pcnt').textContent = `${fInt(rows.length)} viaturas`;
+    }
+    document.getElementById('pq').addEventListener('input', drawPvTable);
+    ptb.querySelectorAll('th button').forEach((b) => b.addEventListener('click', () => {
+      const f = b.parentElement.dataset.field;
+      if (pSortKey === f) pSortDir = -pSortDir; else { pSortKey = f; pSortDir = ['Residual', 'PrecoSemIVA', 'ValorComIVA', 'Margem', 'Mileage'].includes(f) ? -1 : 1; }
+      drawPvTable();
+    }));
+
+    function valueBars(id, box, items, label) {
+      const s = dash.data(id);
+      if (s.status !== 'ok') { failOrWait(box, s.status); return; }
+      box.classList.remove('dash-skeleton');
+      if (!items.length) { box.replaceChildren(); return; }
+      hbars(box, items, { max: d3.max(items, (d) => d.comIVA), label, segs: (d) => [{ v: d.comIVA, c: dash.colors[0] }], valFmt: fEur,
+        tipHead: label, tipLines: (d) => [[null, `${fInt(d.n)} viaturas`], [dash.colors[0], `Venda c/ IVA: ${fEur0(d.comIVA)}`], [null, `Margem: ${fEur0(d.margem)}`]] });
+    }
+
+    function drawVender() {
+      const loc = curLoc();
+      const w = `Localizacao=${enc(loc)}`;
+      const k = dash.data('venda_kpi');
+      document.querySelectorAll('#v-kpis [data-field], #v-warn').forEach((el) => { el.dataset.where = w; });
+      const take = document.getElementById('v-take');
+      const warn = document.getElementById('v-warn');
+      if (k.status === 'ok') {
+        const r = k.data.find((x) => x.Localizacao === loc);
+        document.querySelectorAll('#v-kpis [data-field]').forEach((el) => {
+          el.classList.remove('dash-skeleton');
+          const f = el.dataset.field, v = r ? r[f] : null;
+          el.textContent = v == null ? '—' : f === 'n' ? fInt(v) : f === 'medio' ? fEur0(v) : fEurC(v);
+        });
+        take.classList.remove('dash-skeleton');
+        take.textContent = r ? `${fInt(r.n)} viaturas por vender${loc === 'Todas' ? '' : ' em ' + loc}, com um valor de venda de ${fEur0(r.comIVA)} c/ IVA (${fEur0(r.semIVA)} s/ IVA) e uma margem de ${fEur0(r.margem)} sobre o valor residual.` : '—';
+        warn.hidden = !(r && r.semPreco);
+        warn.textContent = r && r.semPreco ? `${fInt(r.semPreco)} viaturas sem preço de compra no ficheiro: o valor de venda não está calculado (aparece 65 €).` : '';
+      } else {
+        document.querySelectorAll('#v-kpis [data-field]').forEach((el) => { el.textContent = '—'; });
+        take.textContent = '—'; warn.hidden = true;
+      }
+      const pick = (id) => { const s = dash.data(id); return s.status === 'ok' ? s.data.filter((r) => r.Localizacao === loc) : []; };
+      const meses = pick('venda_mes').sort((a, b) => (a.ExitMonth === 'Sem data') - (b.ExitMonth === 'Sem data') || a.ExitMonth.localeCompare(b.ExitMonth));
+      valueBars('venda_mes', document.getElementById('ch-vmes'), meses, (d) => d.ExitMonth === 'Sem data' ? 'Sem data' : d3.utcFormat('%m/%Y')(new Date(d.ExitMonth + '-01T00:00:00Z')));
+      valueBars('venda_marca', document.getElementById('ch-vmarca'), pick('venda_marca').sort((a, b) => b.comIVA - a.comIVA), (d) => d.Make);
+      valueBars('venda_owner', document.getElementById('ch-vown'), pick('venda_owner').sort((a, b) => b.comIVA - a.comIVA), (d) => d.Ownership);
+      valueBars('venda_leasing', document.getElementById('ch-vlea'), pick('venda_leasing').sort((a, b) => b.comIVA - a.comIVA), (d) => String(d.LeasingCompany).replace(/,? S\.A\.?$/, ''));
+      const f = dash.data('frota');
+      pRows = f.status === 'ok' ? f.data : [];
+      drawPvTable();
+    }
+
     let redraw = () => {};
     dash.onData(() => redraw());
 
     redraw = () => {
       const loc = curLoc();
       seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.loc === loc)));
+      if (tab === 'vender') { drawVender(); return; }
       const w = `Localizacao=${enc(loc)}`;
 
       // KPIs
@@ -529,7 +729,7 @@
       if (f.status === 'ok') { lastRows = f.data; drawTable(); }
       else { lastRows = []; vt.querySelector('tbody').replaceChildren(); document.getElementById('cnt').textContent = f.status === 'error' ? 'Failed to load' : ''; }
     };
-    redraw();
+    if (location.hash === '#frota-ativa') showTab('frota', false); else redraw();
   })();
 </script>
 
