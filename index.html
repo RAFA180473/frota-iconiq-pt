@@ -203,6 +203,14 @@
   .fts-btn.primary { background: var(--icq-green, #00f2d7); border-color: var(--icq-green, #00f2d7); color: var(--icq-navy-950, #05141f); }
   .fts-btn:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
   .fts-block-note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .fts-buyer { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
+  .fts-field { display: flex; flex-direction: column; gap: 4px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); flex: 1 1 14rem; max-width: 26rem; min-width: 0; }
+  .fts-field:nth-child(2) { flex: 0 1 10rem; }
+  .fts-field input { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: 8px; padding: 7px 10px; min-width: 0; }
+  .fts-field input:focus-visible { outline: 2px solid var(--icq-green, var(--color-fg)); outline-offset: 1px; border-color: transparent; }
+  .fts-nifmsg { font-size: var(--cds-font-size-caption); color: var(--icq-green, var(--color-ok)); padding-bottom: 9px; }
+  .fts-nifmsg[data-ok="false"] { color: var(--color-warn); }
+  .fts-btn.wa { background: #25d366; border-color: #25d366; color: #05141f; }
   .fts-pop[hidden], .fx-seg[hidden], .fts-clear[hidden] { display: none !important; }
   .fts-pop label { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px; cursor: pointer; }
   .fts-pop label:hover { background: var(--cds-chart-grid); }
@@ -853,58 +861,123 @@
       sall.checked = rows.length > 0 && n === rows.length; sall.indeterminate = n > 0 && n < rows.length;
     }
 
-    // Block-for-sale box: selected vehicles -> email to the sales team via Outlook
+    // Block-for-sale box: selected vehicles + buyer/NIF -> email (formatted table) via Outlook, or WhatsApp
     const MAIL_TO = opts.mailTo || 'joana.santos@autounion.pt';
     const block = el('section', 'fts-block'); block.setAttribute('aria-label', 'Bloquear para venda');
     const bHead = el('div', 'fts-block-head');
     const bTitle = el('h3', null, 'Bloquear para venda');
     const bInfo = el('p', 'fts-block-info');
     bHead.append(bTitle, bInfo);
+    const buyer = el('div', 'fts-buyer');
+    const mkField = (id, label, ph, extra) => {
+      const w = el('label', 'fts-field'); w.htmlFor = id;
+      w.append(el('span', null, label));
+      const i = el('input'); i.id = id; i.type = 'text'; i.placeholder = ph; i.autocomplete = 'off';
+      Object.assign(i, extra || {}); w.append(i); buyer.append(w); return i;
+    };
+    const idp = opts.idp || 'fts';
+    const inBuyer = mkField(`${idp}-comprador`, 'Comprador', 'Nome da empresa ou pessoa');
+    const inNif = mkField(`${idp}-nif`, 'NIF', '9 dígitos', { inputMode: 'numeric', maxLength: 12 });
+    const nifMsg = el('span', 'fts-nifmsg'); buyer.append(nifMsg);
     const bList = el('div', 'fts-block-list');
     const bActs = el('div', 'fts-block-acts');
     const aWeb = el('a', 'fts-btn primary', 'Enviar pelo Outlook'); aWeb.target = '_blank'; aWeb.rel = 'noopener';
     const aApp = el('a', 'fts-btn', 'Abrir na app Outlook');
-    const bCopy = el('button', 'fts-btn', 'Copiar lista'); bCopy.type = 'button';
+    const aWa = el('a', 'fts-btn wa', 'Enviar por WhatsApp'); aWa.target = '_blank'; aWa.rel = 'noopener';
+    const bCopy = el('button', 'fts-btn', 'Copiar tabela'); bCopy.type = 'button';
     const bClear = el('button', 'fts-clear', 'Limpar seleção'); bClear.type = 'button';
     const bNote = el('p', 'fts-block-note');
-    bActs.append(aWeb, aApp, bCopy, bClear);
-    block.append(bHead, bList, bActs, bNote);
+    bActs.append(aWeb, aApp, aWa, bCopy, bClear);
+    block.append(bHead, buyer, bList, bActs, bNote);
     bClear.addEventListener('click', () => { st.pick.clear(); renderTable(); renderBlock(); });
+    [inBuyer, inNif].forEach((i) => i.addEventListener('input', () => renderBlock()));
     const picked = () => st.rows.filter((r) => st.pick.has(r.Plate)).sort((a, b) => String(a.Plate).localeCompare(String(b.Plate)));
     const today = () => { const d = new Date(); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`; };
-    function mailText(rows, withList) {
+    const nifClean = () => inNif.value.replace(/\D/g, '');
+    const nifValid = (n) => {
+      if (!/^\d{9}$/.test(n) || !'125689'.includes(n[0])) return false;
+      let s = 0; for (let i = 0; i < 8; i++) s += Number(n[i]) * (9 - i);
+      const r = s % 11; const c = r < 2 ? 0 : 11 - r; return c === Number(n[8]);
+    };
+    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const kmTxt = (r) => (r.Mileage == null ? '' : `${nf.format(r.Mileage)} km`);
+    function buyerLine() {
+      const b = inBuyer.value.trim(); const n = nifClean();
+      return b || n ? `${b || '(comprador por indicar)'}${n ? ` · NIF ${n}` : ''}` : '';
+    }
+    function htmlTable(rows) {
       const sum = rows.reduce((a, r) => a + (Number(r.ValorComIVA) || 0), 0);
-      const lines = rows.map((r) => `${r.Plate} | ${r.Make} | ${r.Model} | ${r.ModelYear ?? ''} | ${r.Mileage == null ? '' : nf.format(r.Mileage) + ' km'} | ${eur(r.ValorComIVA)} | ${r.Localizacao || ''}`);
-      const list = ['Matrícula | Marca | Modelo | Ano | Kms | Valor de venda | Localização', ...lines, '', `Total: ${nf.format(rows.length)} viaturas · ${eur(sum)}`].join('\n');
-      const body = `Olá Joana,\n\nPeço o bloqueio para venda das seguintes viaturas:\n\n${withList ? list : '(lista copiada: cole aqui com Ctrl+V)'}\n\nObrigado,\n`;
-      return { subject: `Bloqueio para venda – ${nf.format(rows.length)} viatura${rows.length === 1 ? '' : 's'} (${today()})`, body, list };
+      const F = "font-family:Aptos,Calibri,Arial,sans-serif;font-size:11pt;";
+      const th = `style="${F}background:#05141f;color:#00f2d7;text-align:left;padding:7px 10px;border:1px solid #05141f;font-weight:bold;"`;
+      const td = `style="${F}color:#05141f;padding:6px 10px;border:1px solid #c9d3dc;"`;
+      const tdn = `style="${F}color:#05141f;padding:6px 10px;border:1px solid #c9d3dc;text-align:right;"`;
+      const tdv = `style="${F}color:#007e78;padding:6px 10px;border:1px solid #c9d3dc;text-align:right;font-weight:bold;"`;
+      const box = (l, v) => `<td style="${F}padding:8px 14px;border:1px solid #c9d3dc;background:#f4faf9;"><div style="font-size:9pt;color:#52646e;">${esc(l)}</div><div style="font-size:12pt;font-weight:bold;color:#05141f;">${esc(v)}</div></td>`;
+      const b = inBuyer.value.trim(); const n = nifClean();
+      return `<table cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:6px 0 14px;"><tr>${box('Comprador', b || '—')}${box('NIF', n || '—')}${box('Viaturas', nf.format(rows.length))}${box('Valor de venda total', eur(sum))}</tr></table>`
+        + `<table cellspacing="0" cellpadding="0" style="border-collapse:collapse;"><thead><tr>`
+        + ['Matrícula', 'Marca', 'Modelo', 'Ano', 'Kms', 'Valor de venda', 'Localização'].map((h) => `<th ${th}>${h}</th>`).join('')
+        + `</tr></thead><tbody>`
+        + rows.map((r) => `<tr><td ${td}><b>${esc(r.Plate)}</b></td><td ${td}>${esc(r.Make)}</td><td ${td}>${esc(r.Model)}</td><td ${td}>${esc(r.ModelYear)}</td><td ${tdn}>${esc(kmTxt(r))}</td><td ${tdv}>${esc(eur(r.ValorComIVA))}</td><td ${td}>${esc(r.Localizacao)}</td></tr>`).join('')
+        + `<tr><td ${td} colspan="5"><b>Total · ${nf.format(rows.length)} viaturas</b></td><td ${tdv}>${esc(eur(sum))}</td><td ${td}></td></tr></tbody></table>`;
+    }
+    function plainList(rows) {
+      const sum = rows.reduce((a, r) => a + (Number(r.ValorComIVA) || 0), 0);
+      return [buyerLine() ? `Comprador: ${buyerLine()}` : '', 'Matrícula | Marca | Modelo | Ano | Kms | Valor de venda | Localização',
+        ...rows.map((r) => `${r.Plate} | ${r.Make} | ${r.Model} | ${r.ModelYear ?? ''} | ${kmTxt(r)} | ${eur(r.ValorComIVA)} | ${r.Localizacao || ''}`),
+        `Total: ${nf.format(rows.length)} viaturas · ${eur(sum)}`].filter(Boolean).join('\n');
+    }
+    function waText(rows) {
+      const sum = rows.reduce((a, r) => a + (Number(r.ValorComIVA) || 0), 0);
+      const b = inBuyer.value.trim(); const n = nifClean();
+      return [`*BLOQUEIO PARA VENDA · ICONIQ* (${today()})`, b ? `Comprador: *${b}*` : '', n ? `NIF: *${n}*` : '',
+        `${nf.format(rows.length)} viatura${rows.length === 1 ? '' : 's'} · Total *${eur(sum)}*`, '',
+        ...rows.map((r) => `• *${r.Plate}* · ${r.Make} ${r.Model} · ${r.ModelYear ?? ''} · ${kmTxt(r)} · *${eur(r.ValorComIVA)}* · ${r.Localizacao || ''}`)].filter((x, i) => x !== '' || i === 4).join('\n');
+    }
+    function subject(rows) {
+      const b = inBuyer.value.trim();
+      return `Bloqueio para venda – ${nf.format(rows.length)} viatura${rows.length === 1 ? '' : 's'}${b ? ` – ${b}` : ''} (${today()})`;
+    }
+    function mailBody(rows) {
+      const bl = buyerLine();
+      return `Olá Joana,\n\nPeço o bloqueio para venda das seguintes viaturas${bl ? `, para o comprador ${bl}` : ''}:\n\n>>> Cole aqui a tabela (Ctrl+V) <<<\n\nObrigado,\n`;
     }
     function renderBlock() {
       const rows = picked();
       block.hidden = !rows.length;
+      const n = nifClean();
+      nifMsg.textContent = !n ? '' : nifValid(n) ? 'NIF válido' : 'NIF inválido: confirme os 9 dígitos';
+      nifMsg.dataset.ok = String(!n || nifValid(n));
       if (!rows.length) return;
       const sum = rows.reduce((a, r) => a + (Number(r.ValorComIVA) || 0), 0);
       bInfo.textContent = `${nf.format(rows.length)} viatura${rows.length === 1 ? '' : 's'} selecionada${rows.length === 1 ? '' : 's'} · ${eur(sum)} · email para ${MAIL_TO}`;
       bList.replaceChildren(...rows.map((r) => { const b = el('button', 'fts-chip', `${r.Plate} ×`); b.type = 'button'; b.title = `${r.Make} ${r.Model} · ${eur(r.ValorComIVA)}`; b.addEventListener('click', () => { st.pick.delete(r.Plate); renderTable(); renderBlock(); }); return b; }));
-      let m = mailText(rows, true);
-      let web = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(MAIL_TO)}&subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
-      const long = web.length > 7000;
-      if (long) { m = mailText(rows, false); web = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(MAIL_TO)}&subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`; }
-      aWeb.href = web;
-      aApp.href = `mailto:${MAIL_TO}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(mailText(rows, !long && rows.length <= 25).body)}`;
-      bNote.textContent = long || rows.length > 25
-        ? 'Lista grande: ao abrir o Outlook a lista é copiada; cole-a no corpo do email com Ctrl+V antes de enviar.'
-        : 'Abre um email novo no Outlook já preenchido para rever e enviar. A sua assinatura do Outlook é acrescentada pelo próprio Outlook.';
-      block.dataset.long = String(long || rows.length > 25);
+      const s = encodeURIComponent(subject(rows)); const body = encodeURIComponent(mailBody(rows));
+      aWeb.href = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(MAIL_TO)}&subject=${s}&body=${body}`;
+      aApp.href = `mailto:${MAIL_TO}?subject=${s}&body=${body}`;
+      aWa.href = `https://wa.me/?text=${encodeURIComponent(waText(rows))}`;
+      bNote.textContent = 'O Outlook abre com o email preenchido e a tabela já copiada: cole-a com Ctrl+V no sítio indicado, reveja e envie. No WhatsApp escolha o contacto e envie.';
     }
-    const copyList = async () => {
-      const m = mailText(picked(), true);
-      try { await navigator.clipboard.writeText(m.list); bNote.textContent = 'Lista copiada. Cole-a no email com Ctrl+V.'; }
-      catch (e) { bNote.textContent = 'Não foi possível copiar automaticamente: selecione a lista acima e copie-a.'; }
-    };
-    bCopy.addEventListener('click', copyList);
-    aWeb.addEventListener('click', () => { if (block.dataset.long === 'true') copyList(); });
-    aApp.addEventListener('click', () => { if (block.dataset.long === 'true') copyList(); });
+    async function copyTable() {
+      const rows = picked(); if (!rows.length) return false;
+      const html = `<div style="font-family:Aptos,Calibri,Arial,sans-serif;">${htmlTable(rows)}</div>`;
+      const text = plainList(rows);
+      try {
+        if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+          await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]);
+          bNote.textContent = 'Tabela copiada com formatação. No email, cole-a com Ctrl+V no sítio indicado.';
+          return true;
+        }
+        throw new Error('no rich clipboard');
+      } catch (e) {
+        try { await navigator.clipboard.writeText(text); bNote.textContent = 'Copiei a lista em texto (este navegador não deixou copiar a tabela formatada). Cole-a com Ctrl+V.'; return true; }
+        catch (e2) { bNote.textContent = 'Não foi possível copiar automaticamente. Use "Copiar tabela" de novo ou selecione a lista.'; return false; }
+      }
+    }
+    bCopy.addEventListener('click', copyTable);
+    aWeb.addEventListener('click', () => { copyTable(); });
+    aApp.addEventListener('click', () => { copyTable(); });
+    aWa.addEventListener('click', (e) => { if (nifClean() && !nifValid(nifClean())) { bNote.textContent = 'Atenção: o NIF não parece válido. A mensagem segue na mesma; confirme antes de enviar.'; } });
     block.hidden = true;
     root.append(top, kpis, filters, chips, grid, count, colbar, block, tbox);
 
