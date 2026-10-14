@@ -189,6 +189,20 @@
   .fts-table th button.fts-hbtn[data-active="true"] { border-color: var(--icq-green, var(--color-fg)); color: var(--icq-green, var(--color-fg)); }
   .fts-table th button.fts-hbtn:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 1px; }
   .fts-hpop { z-index: 50; }
+  .fts-selcol { width: 34px; text-align: center !important; padding-left: 10px !important; padding-right: 4px !important; }
+  .fts-selcol input { accent-color: var(--icq-green, #00f2d7); width: 15px; height: 15px; cursor: pointer; }
+  .fts-table tbody tr.picked td { background: rgba(0,242,215,.08); }
+  .fts-block { position: sticky; top: 8px; z-index: 6; background: var(--color-panel); border: 1px solid var(--icq-green, var(--color-fg)); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); display: flex; flex-direction: column; gap: 8px; box-shadow: var(--cds-shadow-popover); }
+  .fts-block[hidden] { display: none !important; }
+  .fts-block-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+  .fts-block h3 { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 800; text-transform: uppercase; color: var(--icq-green, var(--color-fg)); font-size: var(--cds-font-size-body); letter-spacing: .03em; }
+  .fts-block-info { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg); font-variant-numeric: tabular-nums; }
+  .fts-block-list { display: flex; flex-wrap: wrap; gap: 6px; max-height: 5.5rem; overflow: auto; }
+  .fts-block-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .fts-btn { font: inherit; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); padding: 7px 14px; border-radius: var(--cds-radius); border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--color-fg); cursor: pointer; text-decoration: none; display: inline-block; }
+  .fts-btn.primary { background: var(--icq-green, #00f2d7); border-color: var(--icq-green, #00f2d7); color: var(--icq-navy-950, #05141f); }
+  .fts-btn:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+  .fts-block-note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
   .fts-pop[hidden], .fx-seg[hidden], .fts-clear[hidden] { display: none !important; }
   .fts-pop label { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px; cursor: pointer; }
   .fts-pop label:hover { background: var(--cds-chart-grid); }
@@ -564,7 +578,7 @@
   function mount(root, opts = {}) {
     const colors = opts.colors || ['#2f5d9e'];
     const OPTIONAL = ['VIN', 'Ownership', 'Category', 'CarGroup', 'Seats', 'FirstLicense', 'CO2', 'CC', 'Fuel'];
-    const st = { rows: [], sel: {}, range: {}, q: '', sortK: 'Plate', sortD: 1, hide: new Set(OPTIONAL) };
+    const st = { rows: [], sel: {}, range: {}, q: '', sortK: 'Plate', sortD: 1, hide: new Set(OPTIONAL), pick: new Set() };
     const vis = () => COLS.filter((c) => !st.hide.has(c.k));
     root.classList.add('fts');
     root.replaceChildren();
@@ -622,6 +636,9 @@
     const thead = el('thead');
     function buildHead() {
       const hr = el('tr');
+      const sth = el('th', 'fts-selcol'); const sall = el('input'); sall.type = 'checkbox'; sall.className = 'fts-selall'; sall.setAttribute('aria-label', 'Selecionar todas as viaturas visíveis');
+      sall.addEventListener('change', () => { const rows = filtered(); rows.forEach((r) => { if (sall.checked) st.pick.add(r.Plate); else st.pick.delete(r.Plate); }); renderTable(); renderBlock(); });
+      sth.append(sall); hr.append(sth);
       vis().forEach((c) => {
         const th = el('th', [c.num && c.t !== 'cat' ? 'num' : '', c.hl ? 'hl' : ''].join(' ').trim() || null); th.dataset.field = c.k;
         const b = el('button', null, c.l); b.type = 'button';
@@ -629,6 +646,7 @@
         th.append(b); hr.append(th);
       });
       const fr = el('tr', 'fts-frow');
+      fr.append(el('th', 'fts-selcol'));
       Object.values(hdds).forEach((d) => d.pop.remove());
       Object.keys(hdds).forEach((k) => delete hdds[k]);
       vis().forEach((c) => {
@@ -687,7 +705,6 @@
     tbox.addEventListener('scroll', () => { if (openDd && hdds[openDd.c.k] === openDd.d) closeAll(); });
     window.addEventListener('resize', () => { if (openDd && openDd.d.pop.classList.contains('fts-hpop')) place(openDd.d); });
 
-    root.append(top, kpis, filters, chips, grid, count, colbar, tbox);
     clear.addEventListener('click', () => { st.sel = {}; st.range = {}; st.q = ''; search.value = ''; closeAll(); render(); });
 
     const valOf = (c, r) => { const v = r[c.k]; return v == null || v === '' ? '(vazio)' : String(v); };
@@ -801,7 +818,10 @@
       thead.querySelectorAll('th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === st.sortK ? (st.sortD > 0 ? 'ascending' : 'descending') : 'none'));
       const frag = document.createDocumentFragment();
       rows.forEach((r) => {
-        const tr = el('tr');
+        const tr = el('tr'); if (st.pick.has(r.Plate)) tr.className = 'picked';
+        const std = el('td', 'fts-selcol'); const cb = el('input'); cb.type = 'checkbox'; cb.checked = st.pick.has(r.Plate); cb.setAttribute('aria-label', `Selecionar ${r.Plate}`);
+        cb.addEventListener('change', () => { if (cb.checked) st.pick.add(r.Plate); else st.pick.delete(r.Plate); tr.classList.toggle('picked', cb.checked); syncAll(); renderBlock(); });
+        std.append(cb); tr.append(std);
         vis().forEach((col) => {
           const td = el('td', [col.num && col.t !== 'cat' ? 'num' : '', col.hl ? 'hl' : ''].join(' ').trim() || null);
           if (col.k === 'Situacao' && r.Situacao) { const p = el('span', 'fts-pill', r.Situacao); td.append(p); }
@@ -811,10 +831,11 @@
         frag.append(tr);
       });
       tbody.replaceChildren(frag);
-      if (!rows.length) { const tr = el('tr'); const td = el('td', 'fts-empty', 'Nenhuma viatura com estes filtros.'); td.colSpan = vis().length; tr.append(td); tbody.append(tr); }
+      if (!rows.length) { const tr = el('tr'); const td = el('td', 'fts-empty', 'Nenhuma viatura com estes filtros.'); td.colSpan = vis().length + 1; tr.append(td); tbody.append(tr); }
       const sum = rows.reduce((a, r) => a + (Number(r.ValorComIVA) || 0), 0);
       const km = rows.filter((r) => Number(r.Mileage) > 0);
       const fr = el('tr');
+      fr.append(el('td', 'fts-selcol'));
       vis().forEach((col) => {
         const td = el('td', [col.num && col.t !== 'cat' ? 'num' : '', col.hl ? 'hl' : ''].join(' ').trim() || null);
         if (col.k === 'Plate') td.textContent = `${nf.format(rows.length)} viaturas`;
@@ -823,8 +844,69 @@
         fr.append(td);
       });
       tfoot.replaceChildren(fr);
+      syncAll();
       return rows;
     }
+    function syncAll() {
+      const sall = thead.querySelector('.fts-selall'); if (!sall) return;
+      const rows = filtered(); const n = rows.filter((r) => st.pick.has(r.Plate)).length;
+      sall.checked = rows.length > 0 && n === rows.length; sall.indeterminate = n > 0 && n < rows.length;
+    }
+
+    // Block-for-sale box: selected vehicles -> email to the sales team via Outlook
+    const MAIL_TO = opts.mailTo || 'joana.santos@autounion.pt';
+    const block = el('section', 'fts-block'); block.setAttribute('aria-label', 'Bloquear para venda');
+    const bHead = el('div', 'fts-block-head');
+    const bTitle = el('h3', null, 'Bloquear para venda');
+    const bInfo = el('p', 'fts-block-info');
+    bHead.append(bTitle, bInfo);
+    const bList = el('div', 'fts-block-list');
+    const bActs = el('div', 'fts-block-acts');
+    const aWeb = el('a', 'fts-btn primary', 'Enviar pelo Outlook'); aWeb.target = '_blank'; aWeb.rel = 'noopener';
+    const aApp = el('a', 'fts-btn', 'Abrir na app Outlook');
+    const bCopy = el('button', 'fts-btn', 'Copiar lista'); bCopy.type = 'button';
+    const bClear = el('button', 'fts-clear', 'Limpar seleção'); bClear.type = 'button';
+    const bNote = el('p', 'fts-block-note');
+    bActs.append(aWeb, aApp, bCopy, bClear);
+    block.append(bHead, bList, bActs, bNote);
+    bClear.addEventListener('click', () => { st.pick.clear(); renderTable(); renderBlock(); });
+    const picked = () => st.rows.filter((r) => st.pick.has(r.Plate)).sort((a, b) => String(a.Plate).localeCompare(String(b.Plate)));
+    const today = () => { const d = new Date(); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`; };
+    function mailText(rows, withList) {
+      const sum = rows.reduce((a, r) => a + (Number(r.ValorComIVA) || 0), 0);
+      const lines = rows.map((r) => `${r.Plate} | ${r.Make} | ${r.Model} | ${r.ModelYear ?? ''} | ${r.Mileage == null ? '' : nf.format(r.Mileage) + ' km'} | ${eur(r.ValorComIVA)} | ${r.Localizacao || ''}`);
+      const list = ['Matrícula | Marca | Modelo | Ano | Kms | Valor de venda | Localização', ...lines, '', `Total: ${nf.format(rows.length)} viaturas · ${eur(sum)}`].join('\n');
+      const body = `Olá Joana,\n\nPeço o bloqueio para venda das seguintes viaturas:\n\n${withList ? list : '(lista copiada: cole aqui com Ctrl+V)'}\n\nObrigado,\n`;
+      return { subject: `Bloqueio para venda – ${nf.format(rows.length)} viatura${rows.length === 1 ? '' : 's'} (${today()})`, body, list };
+    }
+    function renderBlock() {
+      const rows = picked();
+      block.hidden = !rows.length;
+      if (!rows.length) return;
+      const sum = rows.reduce((a, r) => a + (Number(r.ValorComIVA) || 0), 0);
+      bInfo.textContent = `${nf.format(rows.length)} viatura${rows.length === 1 ? '' : 's'} selecionada${rows.length === 1 ? '' : 's'} · ${eur(sum)} · email para ${MAIL_TO}`;
+      bList.replaceChildren(...rows.map((r) => { const b = el('button', 'fts-chip', `${r.Plate} ×`); b.type = 'button'; b.title = `${r.Make} ${r.Model} · ${eur(r.ValorComIVA)}`; b.addEventListener('click', () => { st.pick.delete(r.Plate); renderTable(); renderBlock(); }); return b; }));
+      let m = mailText(rows, true);
+      let web = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(MAIL_TO)}&subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
+      const long = web.length > 7000;
+      if (long) { m = mailText(rows, false); web = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(MAIL_TO)}&subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`; }
+      aWeb.href = web;
+      aApp.href = `mailto:${MAIL_TO}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(mailText(rows, !long && rows.length <= 25).body)}`;
+      bNote.textContent = long || rows.length > 25
+        ? 'Lista grande: ao abrir o Outlook a lista é copiada; cole-a no corpo do email com Ctrl+V antes de enviar.'
+        : 'Abre um email novo no Outlook já preenchido para rever e enviar. A sua assinatura do Outlook é acrescentada pelo próprio Outlook.';
+      block.dataset.long = String(long || rows.length > 25);
+    }
+    const copyList = async () => {
+      const m = mailText(picked(), true);
+      try { await navigator.clipboard.writeText(m.list); bNote.textContent = 'Lista copiada. Cole-a no email com Ctrl+V.'; }
+      catch (e) { bNote.textContent = 'Não foi possível copiar automaticamente: selecione a lista acima e copie-a.'; }
+    };
+    bCopy.addEventListener('click', copyList);
+    aWeb.addEventListener('click', () => { if (block.dataset.long === 'true') copyList(); });
+    aApp.addEventListener('click', () => { if (block.dataset.long === 'true') copyList(); });
+    block.hidden = true;
+    root.append(top, kpis, filters, chips, grid, count, colbar, block, tbox);
 
     function render() {
       const rows = renderTable();
