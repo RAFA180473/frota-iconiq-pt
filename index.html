@@ -178,6 +178,10 @@
   .fts-dd > button[data-active="true"] { border-color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
   .fts-dd > button:focus-visible, .fts-chip:focus-visible, .fts-clear:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 1px; }
   .fts-pop { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; min-width: 15rem; max-width: min(22rem, 90vw); max-height: 20rem; overflow: auto; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-sm); display: flex; flex-direction: column; gap: 2px; font-size: var(--cds-font-size-caption); }
+  .fts-colbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .fts-colbar .lbl { font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
+  .fts-coltoggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 3px 10px; border: 1px solid var(--color-border-line); border-radius: 999px; }
+  .fts-coltoggle:has(input:checked) { border-color: var(--icq-green, var(--color-fg)); color: var(--color-fg); }
   .fts-pop[hidden], .fx-seg[hidden], .fts-clear[hidden] { display: none !important; }
   .fts-pop label { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px; cursor: pointer; }
   .fts-pop label:hover { background: var(--cds-chart-grid); }
@@ -235,7 +239,6 @@
 
   <nav class="fx-tabs" role="tablist" aria-label="Páginas">
     <button type="button" role="tab" id="tabbtn-fleet" data-tab="fleet" aria-selected="true">FLEET TO SELL</button>
-    <button type="button" role="tab" id="tabbtn-vender" data-tab="vender" aria-selected="false">Valores de venda</button>
     <button type="button" role="tab" id="tabbtn-frota" data-tab="frota" aria-selected="false">Frota ativa</button>
   </nav>
 
@@ -553,7 +556,9 @@
 
   function mount(root, opts = {}) {
     const colors = opts.colors || ['#2f5d9e'];
-    const st = { rows: [], sel: {}, range: {}, q: '', sortK: 'Plate', sortD: 1 };
+    const OPTIONAL = ['VIN', 'Ownership', 'Category', 'CarGroup', 'Seats'];
+    const st = { rows: [], sel: {}, range: {}, q: '', sortK: 'Plate', sortD: 1, hide: new Set(OPTIONAL) };
+    const vis = () => COLS.filter((c) => !st.hide.has(c.k));
     root.classList.add('fts');
     root.replaceChildren();
 
@@ -605,19 +610,36 @@
     const tbox = el('div', 'fts-tablebox');
     const table = el('table', 'fts-table');
     if (opts.markSource) { table.dataset.source = opts.markSource; table.dataset.rowKey = 'Plate'; }
-    const thead = el('thead'); const hr = el('tr');
-    COLS.forEach((c) => {
-      const th = el('th', c.num && c.t !== 'cat' ? 'num' : null); th.dataset.field = c.k;
-      const b = el('button', null, c.l); b.type = 'button';
-      b.addEventListener('click', () => { if (st.sortK === c.k) st.sortD = -st.sortD; else { st.sortK = c.k; st.sortD = c.num ? -1 : 1; } renderTable(); });
-      th.append(b); hr.append(th);
+    const thead = el('thead');
+    function buildHead() {
+      const hr = el('tr');
+      vis().forEach((c) => {
+        const th = el('th', c.num && c.t !== 'cat' ? 'num' : null); th.dataset.field = c.k;
+        const b = el('button', null, c.l); b.type = 'button';
+        b.addEventListener('click', () => { if (st.sortK === c.k) st.sortD = -st.sortD; else { st.sortK = c.k; st.sortD = c.num ? -1 : 1; } renderTable(); });
+        th.append(b); hr.append(th);
+      });
+      thead.replaceChildren(hr);
+    }
+    buildHead();
+    const colbar = el('div', 'fts-colbar');
+    colbar.append(el('span', 'lbl', 'Mostrar colunas:'));
+    OPTIONAL.forEach((k) => {
+      const c = COLS.find((x) => x.k === k);
+      const lab = el('label', 'fts-coltoggle'); const cb = el('input'); cb.type = 'checkbox'; cb.id = `${opts.idp || 'fts'}-col-${k}`; cb.checked = !st.hide.has(k);
+      cb.addEventListener('change', () => { if (cb.checked) st.hide.delete(k); else st.hide.add(k); if (st.hide.has(st.sortK)) st.sortK = 'Plate'; buildHead(); renderTable(); });
+      lab.append(cb, el('span', null, c.l)); colbar.append(lab);
     });
-    thead.append(hr);
+    const allb = el('button', 'fts-clear', 'Todas'); allb.type = 'button';
+    allb.addEventListener('click', () => { st.hide.clear(); colbar.querySelectorAll('input').forEach((i) => { i.checked = true; }); buildHead(); renderTable(); });
+    const noneb = el('button', 'fts-clear', 'Ocultar'); noneb.type = 'button';
+    noneb.addEventListener('click', () => { OPTIONAL.forEach((k) => st.hide.add(k)); colbar.querySelectorAll('input').forEach((i) => { i.checked = false; }); if (st.hide.has(st.sortK)) st.sortK = 'Plate'; buildHead(); renderTable(); });
+    colbar.append(allb, noneb);
     const tbody = el('tbody'); const tfoot = el('tfoot');
     table.append(thead, tbody, tfoot); tbox.append(table);
     const count = el('p', 'fts-count');
 
-    root.append(top, kpis, filters, chips, grid, count, tbox);
+    root.append(top, kpis, filters, chips, grid, count, colbar, tbox);
     clear.addEventListener('click', () => { st.sel = {}; st.range = {}; st.q = ''; search.value = ''; closeAll(); render(); });
 
     const valOf = (c, r) => { const v = r[c.k]; return v == null || v === '' ? '(vazio)' : String(v); };
@@ -731,7 +753,7 @@
       const frag = document.createDocumentFragment();
       rows.forEach((r) => {
         const tr = el('tr');
-        COLS.forEach((col) => {
+        vis().forEach((col) => {
           const td = el('td', col.num && col.t !== 'cat' ? 'num' : null);
           if (col.k === 'Situacao' && r.Situacao) { const p = el('span', 'fts-pill', r.Situacao); td.append(p); }
           else td.textContent = cell(col, r);
@@ -740,11 +762,11 @@
         frag.append(tr);
       });
       tbody.replaceChildren(frag);
-      if (!rows.length) { const tr = el('tr'); const td = el('td', 'fts-empty', 'Nenhuma viatura com estes filtros.'); td.colSpan = COLS.length; tr.append(td); tbody.append(tr); }
+      if (!rows.length) { const tr = el('tr'); const td = el('td', 'fts-empty', 'Nenhuma viatura com estes filtros.'); td.colSpan = vis().length; tr.append(td); tbody.append(tr); }
       const sum = rows.reduce((a, r) => a + (Number(r.ValorComIVA) || 0), 0);
       const km = rows.filter((r) => Number(r.Mileage) > 0);
       const fr = el('tr');
-      COLS.forEach((col) => {
+      vis().forEach((col) => {
         const td = el('td', col.num && col.t !== 'cat' ? 'num' : null);
         if (col.k === 'Plate') td.textContent = `${nf.format(rows.length)} viaturas`;
         if (col.k === 'Mileage') td.textContent = km.length ? `média ${nf.format(km.reduce((a, r) => a + Number(r.Mileage), 0) / km.length)}` : '';
@@ -772,7 +794,7 @@
     function exportCsv() {
       const rows = filtered();
       const esc = (v) => { const s = v == null ? '' : String(v); return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-      const lines = [COLS.map((c) => c.l).join(';'), ...rows.map((r) => COLS.map((c) => esc(c.k === 'ValorComIVA' ? (r[c.k] ?? '') : c.k === 'FirstLicense' ? dfmt(r[c.k]) : r[c.k])).join(';'))];
+      const V = vis(); const lines = [V.map((c) => c.l).join(';'), ...rows.map((r) => V.map((c) => esc(c.k === 'ValorComIVA' ? (r[c.k] ?? '') : c.k === 'FirstLicense' ? dfmt(r[c.k]) : r[c.k])).join(';'))];
       const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'fleet_to_sell.csv'; document.body.append(a); a.click(); a.remove();
     }
@@ -1106,7 +1128,7 @@
       if (f.status === 'ok') { lastRows = f.data; drawTable(); }
       else { lastRows = []; vt.querySelector('tbody').replaceChildren(); document.getElementById('cnt').textContent = f.status === 'error' ? 'Failed to load' : ''; }
     };
-    if (location.hash === '#frota-ativa') showTab('frota', false); else if (location.hash === '#por-vender') showTab('vender', false); else redraw();
+    if (location.hash === '#frota-ativa') showTab('frota', false); else redraw();
   })();
 </script>
 
