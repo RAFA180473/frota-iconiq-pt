@@ -184,6 +184,11 @@
   .fts-coltoggle:has(input:checked) { border-color: var(--icq-green, var(--color-fg)); color: var(--color-fg); }
   .fts-table th.hl, .fts-table td.hl { color: var(--icq-green, #00f2d7); font-weight: 700; }
   .fts-table th.hl button { color: var(--icq-green, #00f2d7); }
+  .fts-table tr.fts-frow th { padding: 4px 6px 6px; background: var(--color-panel); }
+  .fts-table th button.fts-hbtn { all: revert; box-sizing: border-box; display: inline-block; font: inherit; font-family: var(--font-anthropic-sans); font-size: .7rem; text-transform: none; letter-spacing: 0; max-width: 11rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 8px; border: 1px solid var(--color-border-line); border-radius: 6px; background: var(--color-bg); color: var(--color-fg-muted); cursor: pointer; }
+  .fts-table th button.fts-hbtn[data-active="true"] { border-color: var(--icq-green, var(--color-fg)); color: var(--icq-green, var(--color-fg)); }
+  .fts-table th button.fts-hbtn:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 1px; }
+  .fts-hpop { z-index: 50; }
   .fts-pop[hidden], .fx-seg[hidden], .fts-clear[hidden] { display: none !important; }
   .fts-pop label { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px; cursor: pointer; }
   .fts-pop label:hover { background: var(--cds-chart-grid); }
@@ -558,7 +563,7 @@
 
   function mount(root, opts = {}) {
     const colors = opts.colors || ['#2f5d9e'];
-    const OPTIONAL = ['VIN', 'Ownership', 'Category', 'CarGroup', 'Seats', 'FirstLicense', 'CO2', 'CC'];
+    const OPTIONAL = ['VIN', 'Ownership', 'Category', 'CarGroup', 'Seats', 'FirstLicense', 'CO2', 'CC', 'Fuel'];
     const st = { rows: [], sel: {}, range: {}, q: '', sortK: 'Plate', sortD: 1, hide: new Set(OPTIONAL) };
     const vis = () => COLS.filter((c) => !st.hide.has(c.k));
     root.classList.add('fts');
@@ -586,19 +591,21 @@
     const search = el('input'); search.type = 'search'; search.id = (opts.idp || 'fts') + '-q'; search.placeholder = 'Procurar Plate, Vin ou Model…'; search.setAttribute('aria-label', 'Procurar viaturas');
     search.addEventListener('input', () => { st.q = search.value.trim().toLowerCase(); render(); });
     filters.append(search);
-    const dds = {};
+    const dds = {}; const hdds = {};
+    const HEADF = { Plate: 'cat', Model: 'cat', ModelYear: 'cat', ValorComIVA: 'range', Localizacao: 'cat', Situacao: 'cat' };
     let openDd = null;
     COLS.filter((c) => c.t !== 'text').forEach((c) => {
       const w = el('div', 'fts-dd');
       const b = el('button', null, c.l); b.type = 'button'; b.setAttribute('aria-expanded', 'false');
       const pop = el('div', 'fts-pop'); pop.hidden = true;
-      b.addEventListener('click', (e) => { e.stopPropagation(); const open = pop.hidden; closeAll(); if (open) { pop.hidden = false; b.setAttribute('aria-expanded', 'true'); openDd = c.k; fillPop(c); } });
+      const d = { b, pop, w };
+      b.addEventListener('click', (e) => { e.stopPropagation(); const open = pop.hidden; closeAll(); if (open) { pop.hidden = false; b.setAttribute('aria-expanded', 'true'); openDd = { c, d }; fillPop(c, d); } });
       pop.addEventListener('click', (e) => e.stopPropagation());
-      w.append(b, pop); filters.append(w); dds[c.k] = { b, pop, w };
+      w.append(b, pop); filters.append(w); dds[c.k] = d;
     });
     document.addEventListener('click', closeAll);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
-    function closeAll() { Object.values(dds).forEach((d) => { d.pop.hidden = true; d.b.setAttribute('aria-expanded', 'false'); }); openDd = null; }
+    function closeAll() { [...Object.values(dds), ...Object.values(hdds)].forEach((d) => { d.pop.hidden = true; d.b.setAttribute('aria-expanded', 'false'); }); openDd = null; }
 
     const chips = el('div', 'fts-chips');
     const grid = el('div', 'fts-grid');
@@ -621,7 +628,44 @@
         b.addEventListener('click', () => { if (st.sortK === c.k) st.sortD = -st.sortD; else { st.sortK = c.k; st.sortD = c.num ? -1 : 1; } renderTable(); });
         th.append(b); hr.append(th);
       });
-      thead.replaceChildren(hr);
+      const fr = el('tr', 'fts-frow');
+      Object.values(hdds).forEach((d) => d.pop.remove());
+      Object.keys(hdds).forEach((k) => delete hdds[k]);
+      vis().forEach((c) => {
+        const th = el('th');
+        if (HEADF[c.k]) {
+          const b = el('button', 'fts-hbtn', 'Todos'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-label', `Filtrar ${c.l}`);
+          const pop = el('div', 'fts-pop fts-hpop'); pop.hidden = true; pop.addEventListener('click', (e) => e.stopPropagation());
+          const d = { b, pop };
+          b.addEventListener('click', (e) => {
+            e.stopPropagation(); const open = pop.hidden; closeAll();
+            if (open) { pop.hidden = false; b.setAttribute('aria-expanded', 'true'); openDd = { c, d }; fillPop(c, d); place(d); }
+          });
+          root.append(pop); hdds[c.k] = d; th.append(b);
+        }
+        fr.append(th);
+      });
+      thead.replaceChildren(hr, fr);
+      requestAnimationFrame(() => { const h = hr.getBoundingClientRect().height; fr.querySelectorAll('th').forEach((th) => { th.style.top = `${h}px`; }); });
+      if (typeof renderHeadLabels === 'function') renderHeadLabels();
+    }
+    function place(d) {
+      const r = d.b.getBoundingClientRect();
+      const w = Math.min(352, window.innerWidth - 16);
+      d.pop.style.position = 'fixed';
+      d.pop.style.top = `${Math.min(r.bottom + 4, window.innerHeight - 120)}px`;
+      d.pop.style.left = `${Math.max(8, Math.min(r.left, window.innerWidth - w - 8))}px`;
+      d.pop.style.maxHeight = `${Math.max(160, window.innerHeight - r.bottom - 24)}px`;
+    }
+    function renderHeadLabels() {
+      Object.entries(hdds).forEach(([k, d]) => {
+        const c = COLS.find((x) => x.k === k);
+        const s = st.sel[k]; const g = st.range[k];
+        let t = 'Todos';
+        if (s && s.size) t = s.size === 1 ? [...s][0] : `${s.size} selec.`;
+        if (g) { const f = (v) => v == null ? '…' : c.eur ? eurC(v) : nf.format(v); t = `${f(g.min)} – ${f(g.max)}`; }
+        d.b.textContent = t + ' ▾'; d.b.dataset.active = String(t !== 'Todos'); d.b.title = t;
+      });
     }
     buildHead();
     const colbar = el('div', 'fts-colbar');
@@ -640,6 +684,8 @@
     const tbody = el('tbody'); const tfoot = el('tfoot');
     table.append(thead, tbody, tfoot); tbox.append(table);
     const count = el('p', 'fts-count');
+    tbox.addEventListener('scroll', () => { if (openDd && hdds[openDd.c.k] === openDd.d) closeAll(); });
+    window.addEventListener('resize', () => { if (openDd && openDd.d.pop.classList.contains('fts-hpop')) place(openDd.d); });
 
     root.append(top, kpis, filters, chips, grid, count, colbar, tbox);
     clear.addEventListener('click', () => { st.sel = {}; st.range = {}; st.q = ''; search.value = ''; closeAll(); render(); });
@@ -660,9 +706,10 @@
     }
     const filtered = () => st.rows.filter((r) => passes(r));
 
-    function fillPop(c) {
-      const d = dds[c.k]; d.pop.replaceChildren();
-      if (c.t === 'cat') {
+    function fillPop(c, d) {
+      d = d || dds[c.k]; d.pop.replaceChildren();
+      const mode = HEADF[c.k] && c.t === 'text' ? 'cat' : c.t;
+      if (mode === 'cat') {
         const base = st.rows.filter((r) => passes(r, c.k));
         const all = new Map(); st.rows.forEach((r) => all.set(valOf(c, r), 0));
         base.forEach((r) => { const v = valOf(c, r); all.set(v, (all.get(v) || 0) + 1); });
@@ -670,7 +717,7 @@
         vals.sort((a, b) => c.num ? (Number(a[0]) || 0) - (Number(b[0]) || 0) : a[0].localeCompare(b[0], 'pt', { numeric: true }));
         const sel = st.sel[c.k] || new Set();
         let q = null;
-        if (c.search || vals.length > 15) { q = el('input', 'q'); q.type = 'search'; q.placeholder = 'Procurar…'; q.setAttribute('aria-label', `Procurar em ${c.l}`); d.pop.append(q); }
+        if (c.search || c.t === 'text' || vals.length > 15) { q = el('input', 'q'); q.type = 'search'; q.placeholder = 'Procurar…'; q.setAttribute('aria-label', `Procurar em ${c.l}`); d.pop.append(q); }
         const list = el('div'); list.style.display = 'flex'; list.style.flexDirection = 'column'; list.style.gap = '2px';
         const draw = () => {
           const f = q ? q.value.trim().toLowerCase() : '';
@@ -682,7 +729,7 @@
         };
         if (q) q.addEventListener('input', draw);
         draw(); d.pop.append(list);
-        const a = el('div', 'acts'); const x = el('button', null, 'Limpar'); x.type = 'button'; x.addEventListener('click', () => { delete st.sel[c.k]; render(); fillPop(c); });
+        const a = el('div', 'acts'); const x = el('button', null, 'Limpar'); x.type = 'button'; x.addEventListener('click', () => { delete st.sel[c.k]; render(); fillPop(c, d); });
         const ok = el('button', null, 'Fechar'); ok.type = 'button'; ok.addEventListener('click', closeAll); a.append(x, ok); d.pop.append(a);
       } else {
         const g = st.range[c.k] || {};
@@ -704,7 +751,7 @@
         };
         a.addEventListener('change', apply); b.addEventListener('change', apply);
         row.append(a, el('span', null, '–'), b); d.pop.append(row);
-        const ac = el('div', 'acts'); const x = el('button', null, 'Limpar'); x.type = 'button'; x.addEventListener('click', () => { delete st.range[c.k]; render(); fillPop(c); });
+        const ac = el('div', 'acts'); const x = el('button', null, 'Limpar'); x.type = 'button'; x.addEventListener('click', () => { delete st.range[c.k]; render(); fillPop(c, d); });
         const ok = el('button', null, 'Fechar'); ok.type = 'button'; ok.addEventListener('click', closeAll); ac.append(x, ok); d.pop.append(ac);
       }
     }
@@ -790,7 +837,8 @@
       K.km.textContent = km.length ? nf.format(km.reduce((a, r) => a + Number(r.Mileage), 0) / km.length) : '—'; K.kms.textContent = 'kms por viatura';
       count.textContent = rows.length === tot ? `${nf.format(tot)} viaturas` : `${nf.format(rows.length)} de ${nf.format(tot)} viaturas com os filtros aplicados`;
       renderChips(); renderBreaks(rows);
-      if (openDd) fillPop(COLS.find((c) => c.k === openDd));
+      renderHeadLabels();
+      if (openDd) fillPop(openDd.c, openDd.d);
     }
 
     function exportCsv() {
