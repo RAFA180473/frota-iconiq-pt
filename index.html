@@ -558,7 +558,7 @@
 
   function mount(root, opts = {}) {
     const colors = opts.colors || ['#2f5d9e'];
-    const OPTIONAL = ['VIN', 'Ownership', 'Category', 'CarGroup', 'Seats'];
+    const OPTIONAL = ['VIN', 'Ownership', 'Category', 'CarGroup', 'Seats', 'FirstLicense', 'CO2', 'CC'];
     const st = { rows: [], sel: {}, range: {}, q: '', sortK: 'Plate', sortD: 1, hide: new Set(OPTIONAL) };
     const vis = () => COLS.filter((c) => !st.hide.has(c.k));
     root.classList.add('fts');
