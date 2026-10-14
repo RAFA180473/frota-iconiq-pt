@@ -182,6 +182,8 @@
   .fts-colbar .lbl { font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
   .fts-coltoggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 3px 10px; border: 1px solid var(--color-border-line); border-radius: 999px; }
   .fts-coltoggle:has(input:checked) { border-color: var(--icq-green, var(--color-fg)); color: var(--color-fg); }
+  .fts-table th.hl, .fts-table td.hl { color: var(--icq-green, #00f2d7); font-weight: 700; }
+  .fts-table th.hl button { color: var(--icq-green, #00f2d7); }
   .fts-pop[hidden], .fx-seg[hidden], .fts-clear[hidden] { display: none !important; }
   .fts-pop label { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px; cursor: pointer; }
   .fts-pop label:hover { background: var(--cds-chart-grid); }
@@ -521,21 +523,21 @@
 (function () {
   const COLS = [
     { k: 'Plate', l: 'Plate', t: 'text' },
+    { k: 'Make', l: 'Marca', t: 'cat' },
+    { k: 'Model', l: 'Modelo', t: 'cat', search: true },
+    { k: 'ModelYear', l: 'Ano', t: 'cat', num: true },
+    { k: 'Mileage', l: 'Kms', t: 'range', num: true },
+    { k: 'ValorComIVA', l: 'Valor de venda', t: 'range', num: true, eur: true, hl: true },
     { k: 'VIN', l: 'Vin', t: 'text' },
     { k: 'Ownership', l: 'Ownership', t: 'cat' },
     { k: 'Category', l: 'Category', t: 'cat' },
     { k: 'CarGroup', l: 'Car group', t: 'cat' },
-    { k: 'Color', l: 'Color', t: 'cat' },
-    { k: 'Model', l: 'Model', t: 'cat', search: true },
-    { k: 'ModelYear', l: 'Model year', t: 'cat', num: true },
     { k: 'Seats', l: 'Model Seats', t: 'cat', num: true },
-    { k: 'Mileage', l: 'Mileage', t: 'range', num: true },
+    { k: 'Color', l: 'Color', t: 'cat' },
     { k: 'FirstLicense', l: 'First license date', t: 'date' },
     { k: 'CO2', l: 'CO2 / Kg emissions', t: 'range', num: true },
-    { k: 'Make', l: 'Make', t: 'cat' },
     { k: 'CC', l: 'CC', t: 'cat', num: true },
     { k: 'Fuel', l: 'Fuel Type', t: 'cat' },
-    { k: 'ValorComIVA', l: 'COM IVA', t: 'range', num: true, eur: true },
     { k: 'Localizacao', l: 'Localização', t: 'cat' },
     { k: 'Situacao', l: 'Situação', t: 'cat' },
   ];
@@ -575,7 +577,7 @@
 
     const kpis = el('div', 'fts-kpis');
     const K = {};
-    [['n', 'Viaturas'], ['sum', 'Valor total COM IVA'], ['avg', 'Preço médio COM IVA'], ['km', 'Km médios']].forEach(([id, l]) => {
+    [['n', 'Viaturas'], ['sum', 'Valor de venda total'], ['avg', 'Valor de venda médio'], ['km', 'Kms médios']].forEach(([id, l]) => {
       const b = el('div', 'fts-kpi'); b.append(el('span', 'l', l)); K[id] = el('span', 'v', '—'); b.append(K[id]); K[id + 's'] = el('span', 's', ''); b.append(K[id + 's']); kpis.append(b);
     });
     if (opts.markSource) kpis.dataset.source = opts.markSource;
@@ -602,7 +604,7 @@
     const grid = el('div', 'fts-grid');
     const cards = {};
     BREAK.forEach(([k, t]) => {
-      const c = el('section', 'fts-card'); c.append(el('h3', null, t)); c.append(el('p', 'n', 'Viaturas e valor COM IVA. Clique para filtrar.'));
+      const c = el('section', 'fts-card'); c.append(el('h3', null, t)); c.append(el('p', 'n', 'Viaturas e valor de venda. Clique para filtrar.'));
       const bars = el('div', 'fts-bars'); c.append(bars); grid.append(c); cards[k] = bars;
       if (opts.markSource) c.dataset.source = opts.markSource;
     });
@@ -614,7 +616,7 @@
     function buildHead() {
       const hr = el('tr');
       vis().forEach((c) => {
-        const th = el('th', c.num && c.t !== 'cat' ? 'num' : null); th.dataset.field = c.k;
+        const th = el('th', [c.num && c.t !== 'cat' ? 'num' : '', c.hl ? 'hl' : ''].join(' ').trim() || null); th.dataset.field = c.k;
         const b = el('button', null, c.l); b.type = 'button';
         b.addEventListener('click', () => { if (st.sortK === c.k) st.sortD = -st.sortD; else { st.sortK = c.k; st.sortD = c.num ? -1 : 1; } renderTable(); });
         th.append(b); hr.append(th);
@@ -754,7 +756,7 @@
       rows.forEach((r) => {
         const tr = el('tr');
         vis().forEach((col) => {
-          const td = el('td', col.num && col.t !== 'cat' ? 'num' : null);
+          const td = el('td', [col.num && col.t !== 'cat' ? 'num' : '', col.hl ? 'hl' : ''].join(' ').trim() || null);
           if (col.k === 'Situacao' && r.Situacao) { const p = el('span', 'fts-pill', r.Situacao); td.append(p); }
           else td.textContent = cell(col, r);
           tr.append(td);
@@ -767,7 +769,7 @@
       const km = rows.filter((r) => Number(r.Mileage) > 0);
       const fr = el('tr');
       vis().forEach((col) => {
-        const td = el('td', col.num && col.t !== 'cat' ? 'num' : null);
+        const td = el('td', [col.num && col.t !== 'cat' ? 'num' : '', col.hl ? 'hl' : ''].join(' ').trim() || null);
         if (col.k === 'Plate') td.textContent = `${nf.format(rows.length)} viaturas`;
         if (col.k === 'Mileage') td.textContent = km.length ? `média ${nf.format(km.reduce((a, r) => a + Number(r.Mileage), 0) / km.length)}` : '';
         if (col.k === 'ValorComIVA') td.textContent = eur(sum);
@@ -785,7 +787,7 @@
       K.n.textContent = nf.format(rows.length); K.ns.textContent = rows.length === tot ? 'todas as viaturas por vender' : `de ${nf.format(tot)} por vender`;
       K.sum.textContent = eurC(sum); K.sums.textContent = eur(sum);
       K.avg.textContent = rows.length ? eur(sum / rows.length).replace(/,\d\d(?=\s?€)/, '') : '—'; K.avgs.textContent = 'por viatura';
-      K.km.textContent = km.length ? nf.format(km.reduce((a, r) => a + Number(r.Mileage), 0) / km.length) : '—'; K.kms.textContent = 'km por viatura';
+      K.km.textContent = km.length ? nf.format(km.reduce((a, r) => a + Number(r.Mileage), 0) / km.length) : '—'; K.kms.textContent = 'kms por viatura';
       count.textContent = rows.length === tot ? `${nf.format(tot)} viaturas` : `${nf.format(rows.length)} de ${nf.format(tot)} viaturas com os filtros aplicados`;
       renderChips(); renderBreaks(rows);
       if (openDd) fillPop(COLS.find((c) => c.k === openDd));
