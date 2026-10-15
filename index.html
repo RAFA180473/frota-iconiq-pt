@@ -59,6 +59,10 @@
   }
   async function load() {
     try {
+      const rv = await fetch('data/vendidas.json', { cache: 'no-store' });
+      const jv = await rv.json(); store.vendidas = { status: 'ok', data: jv.rows || jv.data || jv };
+    } catch (e) { store.vendidas = { status: 'error', data: [], message: String(e) }; }
+    try {
       const r = await fetch('data/frota_iconiq.json', { cache: 'no-store' });
       const j = await r.json();
       store.frota = { status: 'ok', data: j.rows || j };
@@ -269,6 +273,8 @@
   <nav class="fx-tabs" role="tablist" aria-label="Páginas">
     <button type="button" role="tab" id="tabbtn-fleet" data-tab="fleet" aria-selected="true">FLEET TO SELL</button>
     <button type="button" role="tab" id="tabbtn-frota" data-tab="frota" aria-selected="false">Frota ativa</button>
+    <button type="button" role="tab" id="tabbtn-nrt" data-tab="nrt" aria-selected="false">NRT</button>
+    <button type="button" role="tab" id="tabbtn-vendidas" data-tab="vendidas" aria-selected="false">Vendidas</button>
   </nav>
 
   <div class="fx-page" id="fleet-to-sell">
@@ -340,48 +346,105 @@
     </section>
   </div>
 
+  <style>
+    .fx-filt { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); }
+    .fx-filt > .lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); text-transform: uppercase; letter-spacing: .04em; }
+    .fx-filt-dds { display: flex; flex-wrap: wrap; gap: 6px; }
+    .fx-hint { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; }
+    .fx-table tbody tr.fx-click { cursor: pointer; }
+    .fx-table tbody tr.fx-sel td { background: rgba(0,242,215,.10); }
+    .fx-table tbody tr.fx-late td:first-child { box-shadow: inset 3px 0 0 var(--color-bad); }
+    .fx-dbar { display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; width: 100%; }
+    .fx-dbar i { display: inline-block; height: 8px; border-radius: 4px; min-width: 2px; }
+    .fx-late-t { color: var(--color-bad); font-weight: var(--cds-font-weight-medium); }
+    .fx-obs { max-width: 22rem; white-space: normal !important; color: var(--color-fg-muted); }
+  </style>
+
   <div class="fx-page" id="frota-ativa" hidden>
-    <p class="fx-take dash-skeleton" id="takeaway" data-source="kpi_loc">—</p>
+    <div class="fx-filt" id="fa-filtros" aria-label="Filtros da frota ativa"></div>
+    <p class="fx-take dash-skeleton" id="takeaway" data-source="frota">—</p>
 
-  <section class="fx-kpis" id="kpis" aria-label="Indicadores">
-    <div class="fx-kpi"><span class="lbl">Viaturas ativas</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="total">—</span><span class="sub">sem defleet</span></div>
-    <div class="fx-kpi"><span class="lbl">Taxa de ocupação</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="ocupacao">—</span><span class="sub">alugadas ÷ ativas</span></div>
-    <div class="fx-kpi"><span class="lbl">Alugadas</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="alugadas">—</span><span class="sub">Rented</span></div>
-    <div class="fx-kpi"><span class="lbl">Disponíveis</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="disponiveis">—</span><span class="sub">Available</span></div>
-    <div class="fx-kpi"><span class="lbl">Non Revenue</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="nonrev">—</span><span class="sub">manutenção, avarias, etc.</span></div>
-    <div class="fx-kpi"><span class="lbl">Valor frota c/ IVA</span><span class="val dash-skeleton" data-source="kpi_loc" data-field="valor">—</span><span class="sub dash-skeleton" data-source="kpi_loc" data-field="kmMedio">—</span></div>
-  </section>
+    <section class="fx-kpis" id="kpis" aria-label="Indicadores" data-source="frota">
+      <div class="fx-kpi"><span class="lbl">Viaturas ativas</span><span class="val dash-skeleton" data-k="total">—</span><span class="sub">sem defleet, com os filtros</span></div>
+      <div class="fx-kpi"><span class="lbl">Taxa de ocupação</span><span class="val dash-skeleton" data-k="ocupacao">—</span><span class="sub">alugadas ÷ ativas</span></div>
+      <div class="fx-kpi"><span class="lbl">Alugadas</span><span class="val dash-skeleton" data-k="alugadas">—</span><span class="sub">Rented</span></div>
+      <div class="fx-kpi"><span class="lbl">Disponíveis</span><span class="val dash-skeleton" data-k="disponiveis">—</span><span class="sub">Available</span></div>
+      <div class="fx-kpi"><span class="lbl">Em NRT</span><span class="val dash-skeleton" data-k="nonrev">—</span><span class="sub">Non Revenue</span></div>
+      <div class="fx-kpi"><span class="lbl">Valor frota c/ IVA</span><span class="val dash-skeleton" data-k="valor">—</span><span class="sub dash-skeleton" data-k="kmMedio">—</span></div>
+    </section>
+    <p class="fx-hint">Clique numa barra, numa cor ou numa linha para filtrar todo o separador; volte a clicar para retirar.</p>
 
-  <div class="fx-grid">
-    <section class="fx-card" id="estado-localizacao">
-      <h2>Situação por localização</h2>
-      <p class="fx-note">Viaturas ativas em cada aeroporto, pela situação atual no WheelSys.</p>
-      <div class="fx-legend" id="leg-estado"></div>
-      <div class="fx-chart" id="ch-loc" data-source="loc_estado"></div>
-    </section>
-    <section class="fx-card" id="non-revenue">
-      <h2>Non Revenue por motivo</h2>
-      <p class="fx-note" id="nr-note">Viaturas fora de aluguer e porquê.</p>
-      <div class="fx-chart" id="ch-nr" data-source="nr_motivo"></div>
-    </section>
-  </div>
+    <div class="fx-grid">
+      <section class="fx-card" id="estado-localizacao">
+        <h2>Situação por localização</h2>
+        <p class="fx-note">Clique num aeroporto para o escolher, ou numa cor para filtrar essa situação.</p>
+        <div class="fx-legend" id="leg-estado"></div>
+        <div class="fx-chart" id="ch-loc" data-source="frota"></div>
+      </section>
+      <section class="fx-card" id="non-revenue">
+        <h2>NRT por motivo</h2>
+        <p class="fx-note">Viaturas em Non Revenue e média de dias imobilizadas.</p>
+        <div class="fx-chart" id="ch-nr" data-source="frota"></div>
+      </section>
+    </div>
 
-  <div class="fx-grid">
-    <section class="fx-card" id="marcas">
-      <h2>Frota por marca</h2>
-      <p class="fx-note">Número de viaturas; a parte escura está alugada.</p>
-      <div class="fx-chart" id="ch-make" data-source="by_make"></div>
-    </section>
-    <section class="fx-card" id="grupos">
-      <h2>Frota por grupo</h2>
-      <p class="fx-note">Car group, ordenado pelo número de viaturas.</p>
-      <div class="fx-scroll" style="max-height: 20rem">
-        <table class="fx-table" id="tb-group" data-source="by_group" data-row-key="Localizacao,CarGroup">
+    <div class="fx-grid">
+      <section class="fx-card" id="marcas">
+        <h2>Frota por marca</h2>
+        <p class="fx-note">Número de viaturas; a parte colorida está alugada.</p>
+        <div class="fx-chart" id="ch-make" data-source="frota"></div>
+      </section>
+      <section class="fx-card" id="contratos">
+        <h2>Por tipo de contrato</h2>
+        <p class="fx-note">Leased, Buy-back e Owned, por situação.</p>
+        <div class="fx-chart" id="ch-own" data-source="frota"></div>
+      </section>
+    </div>
+
+    <div class="fx-grid">
+      <section class="fx-card" id="quilometros">
+        <h2>Viaturas por quilómetros</h2>
+        <p class="fx-note">Km do WheelSys, por escalão e situação.</p>
+        <div class="fx-chart" id="ch-km" data-source="frota"></div>
+      </section>
+      <section class="fx-card" id="grupos" data-source="frota">
+        <h2>Frota por grupo</h2>
+        <p class="fx-note">Car group; clique numa linha para filtrar.</p>
+        <div class="fx-scroll" style="max-height: 20rem">
+          <table class="fx-table" id="tb-group">
+            <thead><tr>
+              <th data-k="k"><button type="button">Grupo</button></th>
+              <th class="num" data-k="n"><button type="button">Viaturas</button></th>
+              <th class="num" data-k="ocupacao"><button type="button">Ocupação</button></th>
+              <th data-k="alugadas"><button type="button">Alugada · Disp. · NRT</button></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <section class="fx-card" id="viaturas">
+      <h2>Viaturas</h2>
+      <p class="fx-note">Lista da folha master com localização, situação e km do WheelSys. Viaturas em defleet não aparecem.</p>
+      <div class="fx-tools">
+        <input id="q" type="search" placeholder="Procurar matrícula, modelo, grupo…" aria-label="Procurar viaturas">
+        <span class="fx-count" id="cnt"></span>
+      </div>
+      <div class="fx-scroll">
+        <table class="fx-table" id="tb-v" data-source="frota" data-row-key="Plate">
           <thead><tr>
+            <th data-field="Plate"><button type="button">Matrícula</button></th>
+            <th data-field="Make"><button type="button">Marca</button></th>
+            <th data-field="Model"><button type="button">Modelo</button></th>
             <th data-field="CarGroup"><button type="button">Grupo</button></th>
-            <th class="num" data-field="n"><button type="button">Viaturas</button></th>
-            <th class="num" data-field="ocupacao"><button type="button">Ocupação</button></th>
-            <th data-field="alugadas"><button type="button">Alugada · Disp. · NR</button></th>
+            <th data-field="Ownership"><button type="button">Ownership</button></th>
+            <th data-field="Fuel"><button type="button">Combustível</button></th>
+            <th class="num" data-field="Mileage"><button type="button">Km</button></th>
+            <th data-field="FirstLicense"><button type="button">1.ª matrícula</button></th>
+            <th class="num" data-field="ValorComIVA"><button type="button">Valor c/ IVA</button></th>
+            <th data-field="Localizacao"><button type="button">Localização</button></th>
+            <th data-field="Situacao"><button type="button">Situação</button></th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -389,33 +452,80 @@
     </section>
   </div>
 
-  <section class="fx-card" id="viaturas">
-    <h2>Viaturas</h2>
-    <p class="fx-note">Lista da folha master com a localização e situação do WheelSys. Viaturas em defleet não aparecem.</p>
-    <div class="fx-tools">
-      <input id="q" type="search" placeholder="Procurar matrícula, modelo, grupo…" aria-label="Procurar viaturas">
-      <div class="fx-seg" id="estseg" role="group" aria-label="Situação"></div>
-      <span class="fx-count" id="cnt"></span>
+  <div class="fx-page" id="vendidas" hidden>
+    <div id="vend-root"></div>
+  </div>
+
+  <div class="fx-page" id="nrt" hidden>
+    <div class="fx-filt" id="nrt-filtros" aria-label="Filtros NRT"></div>
+    <p class="fx-take dash-skeleton" id="nrt-take" data-source="frota">—</p>
+
+    <section class="fx-kpis" id="nrt-kpis" aria-label="Indicadores NRT" data-source="frota">
+      <div class="fx-kpi"><span class="lbl">Viaturas em NRT</span><span class="val dash-skeleton" data-k="n">—</span><span class="sub dash-skeleton" data-k="pct">—</span></div>
+      <div class="fx-kpi"><span class="lbl">Média de dias imobilizada</span><span class="val dash-skeleton" data-k="media">—</span><span class="sub dash-skeleton" data-k="mediana">—</span></div>
+      <div class="fx-kpi"><span class="lbl">Mais de 30 dias</span><span class="val dash-skeleton" data-k="m30">—</span><span class="sub">imobilizadas há mais de um mês</span></div>
+      <div class="fx-kpi"><span class="lbl">Fim previsto ultrapassado</span><span class="val dash-skeleton" data-k="late">—</span><span class="sub">data de fim do NRT já passou</span></div>
+      <div class="fx-kpi"><span class="lbl">Dias acumulados</span><span class="val dash-skeleton" data-k="soma">—</span><span class="sub">soma dos dias parados</span></div>
+      <div class="fx-kpi"><span class="lbl">Valor imobilizado c/ IVA</span><span class="val dash-skeleton" data-k="valor">—</span><span class="sub">valor de venda das viaturas em NRT</span></div>
+    </section>
+    <p class="fx-hint">Dias contados desde o início do NRT no WheelSys até à última atualização (todos os dias às 11h). Clique nos gráficos para filtrar o quadro.</p>
+
+    <div class="fx-grid">
+      <section class="fx-card" id="nrt-dias">
+        <h2>Dias de imobilização</h2>
+        <p class="fx-note">Viaturas em NRT por escalão de dias parada.</p>
+        <div class="fx-chart" id="ch-nrt-faixa" data-source="frota"></div>
+      </section>
+      <section class="fx-card" id="nrt-motivo">
+        <h2>Por motivo</h2>
+        <p class="fx-note">Número de viaturas e média de dias imobilizadas.</p>
+        <div class="fx-chart" id="ch-nrt-motivo" data-source="frota"></div>
+      </section>
     </div>
-    <div class="fx-scroll">
-      <table class="fx-table" id="tb-v" data-source="frota" data-row-key="Plate">
-        <thead><tr>
-          <th data-field="Plate"><button type="button">Matrícula</button></th>
-          <th data-field="Make"><button type="button">Marca</button></th>
-          <th data-field="Model"><button type="button">Modelo</button></th>
-          <th data-field="CarGroup"><button type="button">Grupo</button></th>
-          <th data-field="Ownership"><button type="button">Ownership</button></th>
-          <th data-field="Fuel"><button type="button">Combustível</button></th>
-          <th class="num" data-field="Mileage"><button type="button">Km</button></th>
-          <th data-field="FirstLicense"><button type="button">1.ª matrícula</button></th>
-          <th class="num" data-field="ValorComIVA"><button type="button">Valor c/ IVA</button></th>
-          <th data-field="Localizacao"><button type="button">Localização</button></th>
-          <th data-field="Situacao"><button type="button">Situação</button></th>
-        </tr></thead>
-        <tbody></tbody>
-      </table>
+
+    <div class="fx-grid">
+      <section class="fx-card" id="nrt-aeroporto">
+        <h2>Por aeroporto</h2>
+        <p class="fx-note">Clique para escolher o aeroporto.</p>
+        <div class="fx-chart" id="ch-nrt-loc" data-source="frota"></div>
+      </section>
+      <section class="fx-card" id="nrt-marca">
+        <h2>Por marca</h2>
+        <p class="fx-note">Número de viaturas e média de dias imobilizadas.</p>
+        <div class="fx-chart" id="ch-nrt-make" data-source="frota"></div>
+      </section>
     </div>
-  </section>
+
+    <section class="fx-card" id="quadro-nrt">
+      <h2>Quadro NRT</h2>
+      <p class="fx-note">Viaturas em Non Revenue com os dados da viatura, o contrato NRT do WheelSys e os dias de imobilização. Ordenado pelos dias parada.</p>
+      <div class="fx-tools">
+        <input id="nq" type="search" placeholder="Procurar matrícula, modelo, Nº NRT…" aria-label="Procurar no quadro NRT">
+        <button type="button" class="fts-btn" id="nrt-csv">Exportar CSV</button>
+        <span class="fx-count" id="ncnt"></span>
+      </div>
+      <div class="fx-scroll">
+        <table class="fx-table" id="tb-nrt" data-source="frota" data-row-key="Plate">
+          <thead><tr>
+            <th data-field="Plate"><button type="button">Matrícula</button></th>
+            <th data-field="Make"><button type="button">Marca</button></th>
+            <th data-field="Model"><button type="button">Modelo</button></th>
+            <th data-field="CarGroup"><button type="button">Grupo</button></th>
+            <th data-field="Ownership"><button type="button">Contrato</button></th>
+            <th class="num" data-field="Mileage"><button type="button">Km</button></th>
+            <th data-field="Localizacao"><button type="button">Localização</button></th>
+            <th data-field="MotivoNR"><button type="button">Motivo</button></th>
+            <th data-field="NRTNo"><button type="button">Nº NRT</button></th>
+            <th data-field="NRTInicio"><button type="button">Início</button></th>
+            <th data-field="NRTFimPrevisto"><button type="button">Fim previsto</button></th>
+            <th class="num" data-field="DiasImobilizacao"><button type="button">Dias imobilizada</button></th>
+            <th class="num" data-field="DiasPrevistos"><button type="button">Dias previstos</button></th>
+            <th data-field="NRTObs"><button type="button">Observações</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </div>
 
@@ -423,95 +533,6 @@
   const LOCS = ['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'];
   const ESTADOS = ['Alugada', 'Disponível', 'Non Revenue'];
   window.fxLOCS = LOCS; window.fxESTADOS = ESTADOS;
-
-  dash.calc('kpi_loc', {
-    title: 'Indicadores por localização',
-    description: 'Contagens por situação, ocupação, valor e km médio, por aeroporto e no total.',
-    inputs: ['frota'],
-    fn: (frota) => {
-      const sets = [['Todas', frota], ...['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].map((l) => [l, frota.filter((r) => r.Localizacao === l)])];
-      return sets.map(([loc, rs]) => {
-        const total = rs.length;
-        const alugadas = rs.filter((r) => r.Estado === 'Alugada').length;
-        const valor = rs.reduce((s, r) => s + (Number(r.ValorComIVA) || 0), 0);
-        const km = rs.filter((r) => Number(r.Mileage) > 0);
-        return {
-          Localizacao: loc, total, alugadas,
-          disponiveis: rs.filter((r) => r.Estado === 'Disponível').length,
-          nonrev: rs.filter((r) => r.Estado === 'Non Revenue').length,
-          ocupacao: total ? alugadas / total : null,
-          valor, kmMedio: km.length ? km.reduce((s, r) => s + Number(r.Mileage), 0) / km.length : null,
-        };
-      });
-    },
-  });
-
-  dash.calc('loc_estado', {
-    title: 'Situação por localização',
-    description: 'Viaturas por aeroporto e situação (Alugada, Disponível, Non Revenue).',
-    inputs: ['frota'],
-    fn: (frota) => {
-      const out = [];
-      ['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].forEach((l) => ['Alugada', 'Disponível', 'Non Revenue'].forEach((e) => {
-        out.push({ Localizacao: l, Estado: e, n: frota.filter((r) => r.Localizacao === l && r.Estado === e).length });
-      }));
-      return out;
-    },
-  });
-
-  dash.calc('nr_motivo', {
-    title: 'Non Revenue por motivo',
-    description: 'Viaturas Non Revenue por motivo, por aeroporto e no total.',
-    inputs: ['frota'],
-    fn: (frota) => {
-      const nr = frota.filter((r) => r.Estado === 'Non Revenue');
-      const out = [];
-      ['Todas', 'Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].forEach((l) => {
-        const rs = l === 'Todas' ? nr : nr.filter((r) => r.Localizacao === l);
-        const m = new Map();
-        rs.forEach((r) => m.set(r.MotivoNR, (m.get(r.MotivoNR) || 0) + 1));
-        m.forEach((n, motivo) => out.push({ Localizacao: l, Motivo: motivo, n }));
-      });
-      return out;
-    },
-  });
-
-  dash.calc('by_make', {
-    title: 'Frota por marca',
-    description: 'Viaturas e alugadas por marca, por aeroporto e no total.',
-    inputs: ['frota'],
-    fn: (frota) => {
-      const out = [];
-      ['Todas', 'Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].forEach((l) => {
-        const rs = l === 'Todas' ? frota : frota.filter((r) => r.Localizacao === l);
-        const m = new Map();
-        rs.forEach((r) => { const o = m.get(r.Make) || { n: 0, alugadas: 0 }; o.n++; if (r.Estado === 'Alugada') o.alugadas++; m.set(r.Make, o); });
-        m.forEach((o, make) => out.push({ Localizacao: l, Make: make, n: o.n, alugadas: o.alugadas }));
-      });
-      return out;
-    },
-  });
-
-  dash.calc('by_group', {
-    title: 'Frota por grupo',
-    description: 'Viaturas por car group e situação, com ocupação, por aeroporto e no total.',
-    inputs: ['frota'],
-    fn: (frota) => {
-      const out = [];
-      ['Todas', 'Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].forEach((l) => {
-        const rs = l === 'Todas' ? frota : frota.filter((r) => r.Localizacao === l);
-        const m = new Map();
-        rs.forEach((r) => {
-          const o = m.get(r.CarGroup) || { n: 0, alugadas: 0, disponiveis: 0, nonrev: 0 };
-          o.n++;
-          if (r.Estado === 'Alugada') o.alugadas++; else if (r.Estado === 'Disponível') o.disponiveis++; else if (r.Estado === 'Non Revenue') o.nonrev++;
-          m.set(r.CarGroup, o);
-        });
-        m.forEach((o, g) => out.push({ Localizacao: l, CarGroup: g, ...o, ocupacao: o.n ? o.alugadas / o.n : null }));
-      });
-      return out;
-    },
-  });
 
   const fxLocSets = (rows) => [['Todas', rows], ...['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].map((l) => [l, rows.filter((r) => r.Localizacao === l)])];
   window.fxLocSets = fxLocSets;
@@ -548,7 +569,7 @@
 
 <script>
 (function () {
-  const COLS = [
+  const BASE_COLS = [
     { k: 'Plate', l: 'Plate', t: 'text' },
     { k: 'Make', l: 'Marca', t: 'cat' },
     { k: 'Model', l: 'Modelo', t: 'cat', search: true },
@@ -568,33 +589,38 @@
     { k: 'Localizacao', l: 'Localização', t: 'cat' },
     { k: 'Situacao', l: 'Situação', t: 'cat' },
   ];
-  const BREAK = [['Make', 'Por marca'], ['CarGroup', 'Por car group'], ['Localizacao', 'Por localização'], ['Situacao', 'Por situação']];
+  const BASE_BREAK = [['Make', 'Por marca'], ['CarGroup', 'Por car group'], ['Localizacao', 'Por localização'], ['Situacao', 'Por situação']];
   const nf = new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 0 });
   const eur = (v) => v == null || v === '' ? '' : new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
   const eurC = (v) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', notation: 'compact', maximumFractionDigits: 2 }).format(v);
   const dfmt = (s) => s ? `${s.slice(8, 10)}/${s.slice(5, 7)}/${s.slice(0, 4)}` : '';
   const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const nf1 = new Intl.NumberFormat('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const cell = (c, r) => {
     const v = r[c.k];
     if (v == null || v === '') return '';
     if (c.eur) return eur(v);
-    if (c.k === 'FirstLicense') return dfmt(v);
-    if (c.k === 'Mileage' || c.k === 'CO2') return nf.format(v);
+    if (c.t === 'date') return dfmt(String(v));
+    if (c.dec) return nf1.format(v);
+    if (c.k === 'Mileage' || c.k === 'CO2' || (c.num && c.t === 'range')) return nf.format(v);
     return String(v);
   };
 
   function mount(root, opts = {}) {
     const colors = opts.colors || ['#2f5d9e'];
-    const OPTIONAL = ['VIN', 'Ownership', 'Category', 'CarGroup', 'Seats', 'FirstLicense', 'CO2', 'CC', 'Fuel'];
-    const st = { rows: [], sel: {}, range: {}, q: '', sortK: 'Plate', sortD: 1, hide: new Set(OPTIONAL), pick: new Set() };
+    const COLS = opts.cols || BASE_COLS;
+    const BREAK = opts.breaks || BASE_BREAK;
+    const VK = opts.valueKey || 'ValorComIVA';
+    const OPTIONAL = opts.optional || ['VIN', 'Ownership', 'Category', 'CarGroup', 'Seats', 'FirstLicense', 'CO2', 'CC', 'Fuel'];
+    const st = { rows: [], sel: {}, range: {}, q: '', sortK: opts.sortK || 'Plate', sortD: opts.sortD || 1, hide: new Set(OPTIONAL), pick: new Set() };
     const vis = () => COLS.filter((c) => !st.hide.has(c.k));
     root.classList.add('fts');
     root.replaceChildren();
 
     const top = el('div', 'fts-top');
     const tl = el('div');
-    tl.append(el('h2', 'fts-title', 'FLEET TO SELL'));
-    const sub = el('p', 'fts-sub', 'Viaturas por vender, da folha "dashboard" do ficheiro master, com a localização e a situação do WheelSys. Não aparecem viaturas em defleet nem em Buy-back (rent back).');
+    tl.append(el('h2', 'fts-title', opts.title || 'FLEET TO SELL'));
+    const sub = el('p', 'fts-sub', opts.sub || 'Viaturas por vender, da folha "dashboard" do ficheiro master, com a localização e a situação do WheelSys. Não aparecem viaturas em defleet nem em Buy-back (rent back).');
     tl.append(sub);
     const acts = el('div', 'fts-actions');
     const clear = el('button', 'fts-clear', 'Limpar filtros'); clear.type = 'button';
@@ -604,17 +630,17 @@
 
     const kpis = el('div', 'fts-kpis');
     const K = {};
-    [['n', 'Viaturas'], ['sum', 'Valor de venda total'], ['avg', 'Valor de venda médio'], ['km', 'Kms médios']].forEach(([id, l]) => {
+    (opts.kpis ? opts.kpis.map((x) => [x.id, x.l]) : [['n', 'Viaturas'], ['sum', 'Valor de venda total'], ['avg', 'Valor de venda médio'], ['km', 'Kms médios']]).forEach(([id, l]) => {
       const b = el('div', 'fts-kpi'); b.append(el('span', 'l', l)); K[id] = el('span', 'v', '—'); b.append(K[id]); K[id + 's'] = el('span', 's', ''); b.append(K[id + 's']); kpis.append(b);
     });
     if (opts.markSource) kpis.dataset.source = opts.markSource;
 
     const filters = el('div', 'fts-filters');
-    const search = el('input'); search.type = 'search'; search.id = (opts.idp || 'fts') + '-q'; search.placeholder = 'Procurar Plate, Vin ou Model…'; search.setAttribute('aria-label', 'Procurar viaturas');
+    const search = el('input'); search.type = 'search'; search.id = (opts.idp || 'fts') + '-q'; search.placeholder = opts.searchPh || 'Procurar Plate, Vin ou Model…'; search.setAttribute('aria-label', 'Procurar viaturas');
     search.addEventListener('input', () => { st.q = search.value.trim().toLowerCase(); render(); });
     filters.append(search);
     const dds = {}; const hdds = {};
-    const HEADF = { Plate: 'cat', Model: 'cat', ModelYear: 'cat', ValorComIVA: 'range', Localizacao: 'cat', Situacao: 'cat' };
+    const HEADF = opts.headf || { Plate: 'cat', Model: 'cat', ModelYear: 'cat', ValorComIVA: 'range', Localizacao: 'cat', Situacao: 'cat' };
     let openDd = null;
     COLS.filter((c) => c.t !== 'text').forEach((c) => {
       const w = el('div', 'fts-dd');
@@ -633,7 +659,7 @@
     const grid = el('div', 'fts-grid');
     const cards = {};
     BREAK.forEach(([k, t]) => {
-      const c = el('section', 'fts-card'); c.append(el('h3', null, t)); c.append(el('p', 'n', 'Viaturas e valor de venda. Clique para filtrar.'));
+      const c = el('section', 'fts-card'); c.append(el('h3', null, t)); c.append(el('p', 'n', opts.breakNote || 'Viaturas e valor de venda. Clique para filtrar.'));
       const bars = el('div', 'fts-bars'); c.append(bars); grid.append(c); cards[k] = bars;
       if (opts.markSource) c.dataset.source = opts.markSource;
     });
@@ -717,7 +743,7 @@
 
     const valOf = (c, r) => { const v = r[c.k]; return v == null || v === '' ? '(vazio)' : String(v); };
     function passes(r, skip) {
-      if (st.q && skip !== '__q') { const s = `${r.Plate} ${r.VIN} ${r.Model}`.toLowerCase(); if (!s.includes(st.q)) return false; }
+      if (st.q && skip !== '__q') { const s = (opts.searchKeys || ['Plate', 'VIN', 'Model']).map((k) => r[k] ?? '').join(' ').toLowerCase(); if (!s.includes(st.q)) return false; }
       for (const c of COLS) {
         if (c.k === skip) continue;
         const s = st.sel[c.k]; if (s && s.size && !s.has(valOf(c, r))) return false;
@@ -749,7 +775,7 @@
           list.replaceChildren(...vals.filter(([v]) => !f || v.toLowerCase().includes(f)).map(([v, n]) => {
             const lab = el('label', n ? null : 'zero'); const cb = el('input'); cb.type = 'checkbox'; cb.checked = sel.has(v);
             cb.addEventListener('change', () => { const s = st.sel[c.k] || new Set(); if (cb.checked) s.add(v); else s.delete(v); st.sel[c.k] = s; render(); });
-            lab.append(cb, el('span', null, c.k === 'ValorComIVA' ? eur(v) : v), el('span', 'c', nf.format(n))); return lab;
+            lab.append(cb, el('span', null, c.eur && v !== '(vazio)' ? eur(v) : v), el('span', 'c', nf.format(n))); return lab;
           }));
         };
         if (q) q.addEventListener('input', draw);
@@ -785,7 +811,7 @@
       const out = [];
       COLS.forEach((c) => {
         const s = st.sel[c.k];
-        if (s && s.size) [...s].forEach((v) => out.push([`${c.l}: ${c.k === 'ValorComIVA' ? eur(v) : v}`, () => { s.delete(v); }]));
+        if (s && s.size) [...s].forEach((v) => out.push([`${c.l}: ${c.eur && v !== '(vazio)' ? eur(v) : v}`, () => { s.delete(v); }]));
         const g = st.range[c.k];
         if (g) { const f = (v) => v == null ? '…' : c.t === 'date' ? dfmt(v) : c.eur ? eur(v) : nf.format(v); out.push([`${c.l}: ${f(g.min)} – ${f(g.max)}`, () => { delete st.range[c.k]; }]); }
         if (dds[c.k]) dds[c.k].b.dataset.active = String(!!((s && s.size) || g));
@@ -799,7 +825,7 @@
       BREAK.forEach(([k], i) => {
         const c = COLS.find((x) => x.k === k);
         const m = new Map();
-        rows.forEach((r) => { const v = valOf(c, r); const o = m.get(v) || { n: 0, s: 0 }; o.n++; o.s += Number(r.ValorComIVA) || 0; m.set(v, o); });
+        rows.forEach((r) => { const v = valOf(c, r); const o = m.get(v) || { n: 0, s: 0 }; o.n++; o.s += Number(r[VK]) || 0; m.set(v, o); });
         const items = [...m.entries()].sort((a, b) => b[1].s - a[1].s);
         const max = Math.max(1, ...items.map(([, o]) => o.s));
         const sel = st.sel[k] || new Set();
@@ -840,15 +866,15 @@
       });
       tbody.replaceChildren(frag);
       if (!rows.length) { const tr = el('tr'); const td = el('td', 'fts-empty', 'Nenhuma viatura com estes filtros.'); td.colSpan = vis().length + 1; tr.append(td); tbody.append(tr); }
-      const sum = rows.reduce((a, r) => a + (Number(r.ValorComIVA) || 0), 0);
-      const km = rows.filter((r) => Number(r.Mileage) > 0);
       const fr = el('tr');
       fr.append(el('td', 'fts-selcol'));
       vis().forEach((col) => {
         const td = el('td', [col.num && col.t !== 'cat' ? 'num' : '', col.hl ? 'hl' : ''].join(' ').trim() || null);
+        const foot = col.foot || (col.k === 'Mileage' ? 'avg' : col.k === VK ? 'sum' : null);
+        const vals = rows.map((r) => r[col.k]).filter((v) => v != null && v !== '' && !isNaN(Number(v))).map(Number);
         if (col.k === 'Plate') td.textContent = `${nf.format(rows.length)} viaturas`;
-        if (col.k === 'Mileage') td.textContent = km.length ? `média ${nf.format(km.reduce((a, r) => a + Number(r.Mileage), 0) / km.length)}` : '';
-        if (col.k === 'ValorComIVA') td.textContent = eur(sum);
+        else if (foot === 'sum') td.textContent = col.eur ? eur(vals.reduce((a, v) => a + v, 0)) : nf.format(vals.reduce((a, v) => a + v, 0));
+        else if (foot === 'avg') { const pos = col.k === 'Mileage' ? vals.filter((v) => v > 0) : vals; td.textContent = pos.length ? `média ${col.eur ? eur(pos.reduce((a, v) => a + v, 0) / pos.length) : col.dec ? nf1.format(pos.reduce((a, v) => a + v, 0) / pos.length) : nf.format(pos.reduce((a, v) => a + v, 0) / pos.length)}` : ''; }
         fr.append(td);
       });
       tfoot.replaceChildren(fr);
@@ -979,13 +1005,20 @@
     aApp.addEventListener('click', () => { copyTable(); });
     aWa.addEventListener('click', (e) => { if (nifClean() && !nifValid(nifClean())) { bNote.textContent = 'Atenção: o NIF não parece válido. A mensagem segue na mesma; confirme antes de enviar.'; } });
     block.hidden = true;
-    root.append(top, kpis, filters, chips, grid, count, colbar, block, tbox);
+    root.append(top, kpis, filters, chips, grid, count, colbar, ...(opts.block === false ? [] : [block]), tbox);
 
     function render() {
       const rows = renderTable();
       const sum = rows.reduce((a, r) => a + (Number(r.ValorComIVA) || 0), 0);
       const km = rows.filter((r) => Number(r.Mileage) > 0);
       const tot = st.rows.length;
+      if (opts.kpis) {
+        opts.kpis.forEach((x) => { const [v, s2] = x.v(rows, tot, { nf, nf1, eur, eurC }); K[x.id].textContent = v; K[x.id + 's'].textContent = s2 || ''; });
+        count.textContent = rows.length === tot ? `${nf.format(tot)} viaturas` : `${nf.format(rows.length)} de ${nf.format(tot)} viaturas com os filtros aplicados`;
+        renderChips(); renderBreaks(rows); renderHeadLabels();
+        if (openDd) fillPop(openDd.c, openDd.d);
+        return;
+      }
       K.n.textContent = nf.format(rows.length); K.ns.textContent = rows.length === tot ? 'todas as viaturas por vender' : `de ${nf.format(tot)} por vender`;
       K.sum.textContent = eurC(sum); K.sums.textContent = eur(sum);
       K.avg.textContent = rows.length ? eur(sum / rows.length).replace(/,\d\d(?=\s?€)/, '') : '—'; K.avgs.textContent = 'por viatura';
@@ -999,9 +1032,9 @@
     function exportCsv() {
       const rows = filtered();
       const esc = (v) => { const s = v == null ? '' : String(v); return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-      const V = vis(); const lines = [V.map((c) => c.l).join(';'), ...rows.map((r) => V.map((c) => esc(c.k === 'ValorComIVA' ? (r[c.k] ?? '') : c.k === 'FirstLicense' ? dfmt(r[c.k]) : r[c.k])).join(';'))];
+      const V = vis(); const lines = [V.map((c) => c.l).join(';'), ...rows.map((r) => V.map((c) => esc(c.t === 'date' ? dfmt(String(r[c.k] || '')) : (c.num || c.eur) && r[c.k] != null && r[c.k] !== '' ? String(r[c.k]).replace('.', ',') : r[c.k])).join(';'))];
       const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'fleet_to_sell.csv'; document.body.append(a); a.click(); a.remove();
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = opts.csvName || 'fleet_to_sell.csv'; document.body.append(a); a.click(); a.remove();
     }
 
     return {
@@ -1009,7 +1042,7 @@
       redraw() { render(); },
     };
   }
-  window.FTS = { mount, COLS };
+  window.FTS = { mount, COLS: BASE_COLS };
 })();
 </script>
 
@@ -1033,18 +1066,6 @@
       b.addEventListener('click', () => dash.setParams({ loc: l === 'Todas' ? null : l }));
       seg.appendChild(b);
     });
-    // Estado control for table
-    let estFilter = 'Todas';
-    const eseg = document.getElementById('estseg');
-    ['Todas', ...ESTADOS].forEach((e) => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.textContent = e; b.dataset.e = e;
-      b.addEventListener('click', () => { estFilter = e; drawTable(); });
-      eseg.appendChild(b);
-    });
-    const leg = document.getElementById('leg-estado');
-    ESTADOS.forEach((e) => { const s = document.createElement('span'); const i = document.createElement('i'); i.style.background = colOf(e); s.append(i, e); leg.appendChild(s); });
-
     function failOrWait(el, st) {
       el.replaceChildren();
       if (st === 'error' || st === 'connect' || st === 'declined') { const d = document.createElement('div'); d.className = 'fx-fail'; d.textContent = 'Failed to load'; el.appendChild(d); el.classList.remove('dash-skeleton'); }
@@ -1068,8 +1089,8 @@
       };
     }
 
-    // Horizontal bars helper
-    function hbars(box, items, { stacked, segs, max, label, tipHead, tipLines, valFmt }) {
+    // Horizontal bars helper (clickable: onClick on a row, onSeg on a segment)
+    function hbars(box, items, { stacked, segs, max, label, tipHead, tipLines, valFmt, valText, onClick, isSel, onSeg, segSel }) {
       const W = box.clientWidth || 400;
       const rowH = 26, gap = 8;
       const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${items.length * (rowH + gap) + 4}`);
@@ -1077,104 +1098,469 @@
       box.replaceChildren(svg.node());
       let lw = 0; items.forEach((d) => { probe.text(label(d)); lw = Math.max(lw, probe.node().getComputedTextLength()); });
       probe.remove();
-      const left = Math.min(lw + 12, W * 0.45), right = valFmt ? 72 : 44;
+      const left = Math.min(lw + 12, W * 0.45), right = valText ? 104 : valFmt ? 72 : 44;
       const x = d3.scaleLinear([0, max || 1], [0, Math.max(10, W - left - right)]);
       const tip = tooltip(box);
+      const anySel = isSel ? items.some((d) => isSel(d)) : false;
       items.forEach((d, i) => {
-        const g = svg.append('g').attr('transform', `translate(0,${i * (rowH + gap)})`);
-        g.append('text').attr('class', 'strong').attr('x', left - 10).attr('y', rowH / 2).attr('dy', '0.35em').attr('text-anchor', 'end').text(label(d));
+        const dim = anySel && !isSel(d);
+        const g = svg.append('g').attr('transform', `translate(0,${i * (rowH + gap)})`)
+          .on('mousemove', (ev) => tip.show(ev, tipHead(d), tipLines(d))).on('mouseleave', () => tip.hide());
+        if (onClick) g.style('cursor', 'pointer').on('click', () => { tip.hide(); onClick(d); });
+        g.append('rect').attr('x', 0).attr('y', 0).attr('width', W).attr('height', rowH).attr('fill', 'transparent');
+        g.append('text').attr('class', 'strong').attr('x', left - 10).attr('y', rowH / 2).attr('dy', '0.35em').attr('text-anchor', 'end')
+          .style('font-weight', anySel && !dim ? 700 : null).style('opacity', dim ? 0.55 : null).text(label(d));
         g.append('rect').attr('x', left).attr('y', 3).attr('height', rowH - 6).attr('width', x(max || 1)).attr('rx', 4).attr('fill', 'var(--cds-chart-grid)');
         let acc = 0;
         segs(d).forEach((s) => {
           if (!s.v) return;
-          g.append('rect').attr('x', left + x(acc)).attr('y', 3).attr('height', rowH - 6).attr('width', Math.max(1, x(s.v))).attr('rx', stacked ? 0 : 4).attr('fill', s.c);
+          const off = dim || (segSel && s.e != null && segSel(d, s) === false);
+          const r = g.append('rect').attr('x', left + x(acc)).attr('y', 3).attr('height', rowH - 6).attr('width', Math.max(1, x(s.v))).attr('rx', stacked ? 0 : 4)
+            .attr('fill', s.c).attr('opacity', off ? 0.3 : 1);
+          if (onSeg && s.e != null) r.style('cursor', 'pointer').on('click', (ev) => { ev.stopPropagation(); tip.hide(); onSeg(d, s); });
           acc += s.v;
         });
-        g.append('text').attr('class', 'strong').attr('x', left + x(acc) + 6).attr('y', rowH / 2).attr('dy', '0.35em').text((valFmt || fInt)(acc));
-        g.append('rect').attr('x', 0).attr('y', 0).attr('width', W).attr('height', rowH).attr('fill', 'transparent')
-          .on('mousemove', (ev) => tip.show(ev, tipHead(d), tipLines(d))).on('mouseleave', () => tip.hide());
+        g.append('text').attr('class', 'strong').attr('x', left + x(acc) + 6).attr('y', rowH / 2).attr('dy', '0.35em')
+          .style('opacity', dim ? 0.55 : null).text(valText ? valText(d, acc) : (valFmt || fInt)(acc));
       });
     }
 
-    let lastRows = [];
-    let sortKey = 'Plate', sortDir = 1;
-    const vt = document.getElementById('tb-v');
-    function drawTable() {
-      eseg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.e === estFilter)));
-      const tb = vt.querySelector('tbody');
-      const loc = curLoc();
-      const q = document.getElementById('q').value.trim().toLowerCase();
-      let rows = lastRows.filter((r) => (loc === 'Todas' || r.Localizacao === loc) && (estFilter === 'Todas' || r.Estado === estFilter));
-      if (q) rows = rows.filter((r) => [r.Plate, r.Model, r.Make, r.CarGroup, r.Situacao, r.Ownership, r.Fuel].join(' ').toLowerCase().includes(q));
-      const num = ['Mileage', 'ValorComIVA'].includes(sortKey);
-      rows.sort((a, b) => num ? ((Number(a[sortKey]) || 0) - (Number(b[sortKey]) || 0)) * sortDir : String(a[sortKey] ?? '').localeCompare(String(b[sortKey] ?? ''), 'pt') * sortDir);
-      vt.querySelectorAll('th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === sortKey ? (sortDir > 0 ? 'ascending' : 'descending') : 'none'));
-      tb.replaceChildren(...rows.map((r) => {
-        const tr = document.createElement('tr');
-        const cells = [
-          [r.Plate], [r.Make], [r.Model, 'wrap'], [r.CarGroup], [r.Ownership], [r.Fuel],
-          [r.Mileage == null ? '' : fKm(r.Mileage), 'num'], [r.FirstLicense ? d3.utcFormat('%d/%m/%Y')(new Date(r.FirstLicense)) : ''],
-          [fEurFull(r.ValorComIVA), 'num'], [r.Localizacao],
-        ];
-        cells.forEach(([v, cls]) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = v ?? ''; tr.appendChild(td); });
-        const td = document.createElement('td'); const p = document.createElement('span'); p.className = 'fx-pill'; p.textContent = r.Situacao;
-        p.style.borderColor = colOf(r.Estado); td.appendChild(p); tr.appendChild(td);
-        return tr;
-      }));
-      document.getElementById('cnt').textContent = `${fInt(rows.length)} viaturas`;
-    }
-    document.getElementById('q').addEventListener('input', drawTable);
-    vt.querySelectorAll('th button').forEach((b) => b.addEventListener('click', () => {
-      const f = b.parentElement.dataset.field;
-      if (sortKey === f) sortDir = -sortDir; else { sortKey = f; sortDir = 1; }
-      drawTable();
-    }));
+    // ---------- Filtros cruzados (Frota ativa e NRT) ----------
+    const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+    const dFmt = (s) => s ? `${String(s).slice(8, 10)}/${String(s).slice(5, 7)}/${String(s).slice(0, 4)}` : '';
+    const DAYB = [['0–7 dias', 0, 7], ['8–15 dias', 8, 15], ['16–30 dias', 16, 30], ['31–90 dias', 31, 90], ['Mais de 90 dias', 91, Infinity]];
+    const faixaDias = (r) => {
+      if (r.DiasImobilizacao == null || r.DiasImobilizacao === '') return 'Sem data';
+      const d = Number(r.DiasImobilizacao);
+      return (DAYB.find(([, a, b]) => d >= a && d <= b) || DAYB[0])[0];
+    };
+    const KMB = [[0, 10000], [10000, 20000], [20000, 40000], [40000, 60000], [60000, 80000], [80000, Infinity]];
+    const kmLabel = ([a, b]) => b === Infinity ? `Mais de ${a / 1000} mil km` : `${a / 1000}–${b / 1000} mil km`;
+    const faixaKm = (r) => {
+      const k = Number(r.Mileage);
+      if (r.Mileage == null || r.Mileage === '' || isNaN(k)) return 'Sem km';
+      return kmLabel(KMB.find(([a, b]) => k >= a && k < b) || KMB[KMB.length - 1]);
+    };
+    const DIMS = {
+      Estado: { l: 'Situação', get: (r) => r.Estado, order: ESTADOS },
+      MotivoNR: { l: 'Motivo NRT', get: (r) => r.Estado === 'Non Revenue' ? (r.MotivoNR || 'Sem motivo') : null },
+      Faixa: { l: 'Dias imobilizada', get: faixaDias, order: [...DAYB.map((b) => b[0]), 'Sem data'] },
+      Make: { l: 'Marca', get: (r) => r.Make || 'Sem marca' },
+      CarGroup: { l: 'Grupo', get: (r) => r.CarGroup || 'Sem grupo' },
+      Ownership: { l: 'Contrato', get: (r) => r.Ownership || 'Sem informação' },
+      Fuel: { l: 'Combustível', get: (r) => r.Fuel || 'Sem informação' },
+      KmFaixa: { l: 'Km', get: faixaKm, order: [...KMB.map(kmLabel), 'Sem km'] },
+    };
+    const curLocOrNull = () => dash.params().loc || null;
 
-    let gSortKey = 'n', gSortDir = -1;
-    const gt = document.getElementById('tb-group');
-    gt.querySelectorAll('th button').forEach((b) => b.addEventListener('click', () => {
-      const f = b.parentElement.dataset.field;
-      if (gSortKey === f) gSortDir = -gSortDir; else { gSortKey = f; gSortDir = f === 'CarGroup' ? 1 : -1; }
-      drawGroups();
+    function makeFilter(bar, dims, onChange) {
+      const st = Object.fromEntries(dims.map((k) => [k, new Set()]));
+      let all = [];
+      let open = null;
+      const passes = (r, skip) => {
+        if (skip !== 'loc') { const l = curLocOrNull(); if (l && r.Localizacao !== l) return false; }
+        for (const k of dims) { if (k === skip || !st[k].size) continue; if (!st[k].has(DIMS[k].get(r))) return false; }
+        return true;
+      };
+      const filtered = (skip) => all.filter((r) => passes(r, skip));
+      const ddWrap = mk('div', 'fx-filt-dds');
+      const chips = mk('div', 'fts-chips');
+      const clear = mk('button', 'fts-clear', 'Limpar filtros'); clear.type = 'button';
+      clear.addEventListener('click', () => { dims.forEach((k) => st[k].clear()); if (curLocOrNull()) dash.setParams({ loc: null }); else onChange(); });
+      bar.replaceChildren(mk('span', 'lbl', 'Filtros'), ddWrap, chips, clear);
+      const dds = {};
+      function closeAll() { Object.values(dds).forEach((d) => { d.pop.hidden = true; d.b.setAttribute('aria-expanded', 'false'); }); open = null; }
+      function options(k) {
+        const cnt = new Map();
+        filtered(k).forEach((r) => { const v = DIMS[k].get(r); if (v != null) cnt.set(v, (cnt.get(v) || 0) + 1); });
+        const vals = new Set(all.map((r) => DIMS[k].get(r)).filter((v) => v != null));
+        st[k].forEach((v) => vals.add(v));
+        const ord = DIMS[k].order;
+        return [...vals].sort((a, b) => ord ? ord.indexOf(a) - ord.indexOf(b)
+          : (cnt.get(b) || 0) - (cnt.get(a) || 0) || String(a).localeCompare(String(b), 'pt', { numeric: true }))
+          .map((v) => [v, cnt.get(v) || 0]);
+      }
+      function fill(k) {
+        const d = dds[k];
+        d.pop.replaceChildren();
+        let q = null;
+        if (options(k).length > 8) {
+          q = mk('input', 'q'); q.type = 'search'; q.placeholder = 'Procurar…'; q.setAttribute('aria-label', 'Procurar ' + DIMS[k].l);
+          d.pop.appendChild(q);
+        }
+        const list = mk('div'); list.style.cssText = 'display:flex;flex-direction:column;gap:2px';
+        const acts = mk('div', 'acts');
+        const a1 = mk('button', null, 'Limpar'); a1.type = 'button'; a1.addEventListener('click', () => { st[k].clear(); onChange(); });
+        const a2 = mk('button', null, 'Fechar'); a2.type = 'button'; a2.addEventListener('click', closeAll);
+        acts.append(a1, a2);
+        d.pop.append(list, acts);
+        d.drawList = () => {
+          const qq = q ? q.value.trim().toLowerCase() : '';
+          list.replaceChildren(...options(k).filter(([v]) => !qq || String(v).toLowerCase().includes(qq)).map(([v, n]) => {
+            const lab = mk('label'); if (!n && !st[k].has(v)) lab.className = 'zero';
+            const cb = mk('input'); cb.type = 'checkbox'; cb.checked = st[k].has(v);
+            cb.addEventListener('change', () => { if (cb.checked) st[k].add(v); else st[k].delete(v); onChange(); });
+            lab.append(cb, mk('span', null, String(v)), mk('span', 'c', fInt(n)));
+            return lab;
+          }));
+        };
+        if (q) q.addEventListener('input', d.drawList);
+        d.drawList();
+      }
+      dims.forEach((k) => {
+        const w = mk('div', 'fts-dd');
+        const b = mk('button', null, DIMS[k].l); b.type = 'button'; b.setAttribute('aria-haspopup', 'true'); b.setAttribute('aria-expanded', 'false');
+        const pop = mk('div', 'fts-pop'); pop.hidden = true; pop.setAttribute('role', 'group'); pop.setAttribute('aria-label', DIMS[k].l);
+        b.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const was = open === k; closeAll();
+          if (!was) { open = k; pop.hidden = false; b.setAttribute('aria-expanded', 'true'); fill(k); }
+        });
+        pop.addEventListener('click', (ev) => ev.stopPropagation());
+        w.append(b, pop); ddWrap.appendChild(w);
+        dds[k] = { b, pop, drawList: null };
+      });
+      document.addEventListener('click', closeAll);
+      document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeAll(); });
+      function render() {
+        dims.forEach((k) => { const n = st[k].size; dds[k].b.textContent = n ? `${DIMS[k].l} (${n})` : DIMS[k].l; dds[k].b.dataset.active = String(n > 0); });
+        const out = [];
+        const l = curLocOrNull();
+        if (l) out.push([`Localização: ${l.replace(' Aeroporto', '')}`, () => dash.setParams({ loc: null })]);
+        dims.forEach((k) => st[k].forEach((v) => out.push([`${DIMS[k].l}: ${v}`, () => { st[k].delete(v); onChange(); }])));
+        chips.replaceChildren(...out.map(([t, fn]) => { const c = mk('button', 'fts-chip', `${t} ×`); c.type = 'button'; c.setAttribute('aria-label', `Retirar filtro ${t}`); c.addEventListener('click', fn); return c; }));
+        clear.hidden = !out.length;
+        if (open && dds[open].drawList) dds[open].drawList();
+      }
+      return {
+        st, filtered, render,
+        set(rows) { all = rows; },
+        toggle(k, v) { if (st[k].has(v)) st[k].delete(v); else st[k].add(v); onChange(); },
+        active: () => !!curLocOrNull() || dims.some((k) => st[k].size > 0),
+      };
+    }
+
+    const countBy = (rows, get) => {
+      const m = new Map();
+      rows.forEach((r) => {
+        const k = get(r); if (k == null) return;
+        const o = m.get(k) || { k, n: 0, alugadas: 0, disponiveis: 0, nonrev: 0, dias: 0, nd: 0, maxd: 0, valor: 0 };
+        o.n++; o.valor += Number(r.ValorComIVA) || 0;
+        if (r.Estado === 'Alugada') o.alugadas++; else if (r.Estado === 'Disponível') o.disponiveis++; else if (r.Estado === 'Non Revenue') o.nonrev++;
+        if (r.DiasImobilizacao != null && r.DiasImobilizacao !== '') { const d = Number(r.DiasImobilizacao); o.dias += d; o.nd++; o.maxd = Math.max(o.maxd, d); }
+        m.set(k, o);
+      });
+      return [...m.values()];
+    };
+    const byEst = (o) => ({ Alugada: o.alugadas, 'Disponível': o.disponiveis, 'Non Revenue': o.nonrev });
+    const estSegs = (o) => ESTADOS.map((e) => ({ v: byEst(o)[e], c: colOf(e), e }));
+    const estTip = (o) => [[null, `${fInt(o.n)} viaturas`], ...ESTADOS.map((e) => [colOf(e), `${e}: ${fInt(byEst(o)[e])} (${fPct(o.n ? byEst(o)[e] / o.n : 0)})`])];
+    const avgD = (o) => o.nd ? o.dias / o.nd : null;
+    const diasTxt = (v) => v == null ? '—' : `${fKm(v)} ${Math.round(v) === 1 ? 'dia' : 'dias'}`;
+    function chart(box, items, opts, empty) {
+      box.classList.remove('dash-skeleton');
+      if (!items.length) { box.replaceChildren(mk('p', 'fx-note', empty || 'Sem viaturas com estes filtros.')); return; }
+      hbars(box, items, opts);
+    }
+    const setKpis = (root, vals, status) => root.querySelectorAll('[data-k]').forEach((e) => {
+      e.classList.toggle('dash-skeleton', status === 'loading');
+      const v = vals ? vals[e.dataset.k] : null;
+      e.textContent = v == null ? (status === 'error' ? 'Failed to load' : '—') : v;
+    });
+    const sortRows = (rows, key, dir, nums) => rows.sort((a, b) => {
+      if (nums.includes(key)) {
+        const x = a[key] == null || a[key] === '' ? null : Number(a[key]), y = b[key] == null || b[key] === '' ? null : Number(b[key]);
+        if (x == null && y != null) return 1; if (y == null && x != null) return -1;
+        return ((x || 0) - (y || 0)) * dir;
+      }
+      const x = a[key] ?? '', y = b[key] ?? '';
+      if (x === '' && y !== '') return 1; if (y === '' && x !== '') return -1;
+      return String(x).localeCompare(String(y), 'pt', { numeric: true }) * dir;
+    });
+    const sortable = (table, state, draw) => table.querySelectorAll('th button').forEach((b) => b.addEventListener('click', () => {
+      const f = b.parentElement.dataset.field || b.parentElement.dataset.k;
+      if (state.key === f) state.dir = -state.dir; else { state.key = f; state.dir = state.nums.includes(f) ? -1 : 1; }
+      draw();
     }));
-    function drawGroups() {
-      const s = dash.data('by_group');
-      const tb = gt.querySelector('tbody');
-      if (s.status !== 'ok') { tb.replaceChildren(); return; }
-      const loc = curLoc();
-      const rows = s.data.filter((r) => r.Localizacao === loc);
-      const max = d3.max(rows, (r) => r.n) || 1;
-      rows.sort((a, b) => gSortKey === 'CarGroup' ? a.CarGroup.localeCompare(b.CarGroup, 'pt', { numeric: true }) * gSortDir : ((a[gSortKey] ?? 0) - (b[gSortKey] ?? 0)) * gSortDir);
-      gt.querySelectorAll('th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === gSortKey ? (gSortDir > 0 ? 'ascending' : 'descending') : 'none'));
-      tb.replaceChildren(...rows.map((r) => {
-        const tr = document.createElement('tr');
-        tr.dataset.key = `${enc(r.Localizacao)},${enc(r.CarGroup)}`;
-        const a = document.createElement('td'); a.textContent = r.CarGroup;
-        const b = document.createElement('td'); b.className = 'num'; b.textContent = fInt(r.n);
-        const c = document.createElement('td'); c.className = 'num'; c.textContent = r.ocupacao == null ? '' : fPct(r.ocupacao);
-        const d = document.createElement('td'); const bar = document.createElement('div'); bar.className = 'fx-bar';
-        bar.style.width = `${Math.max(12, (r.n / max) * 100)}%`;
-        [[r.alugadas, 'Alugada'], [r.disponiveis, 'Disponível'], [r.nonrev, 'Non Revenue']].forEach(([v, e]) => { const sp = document.createElement('span'); sp.style.width = `${(v / r.n) * 100}%`; sp.style.background = colOf(e); bar.appendChild(sp); });
-        bar.title = '';
-        d.appendChild(bar);
-        tr.append(a, b, c, d);
+    const markSort = (table, state) => table.querySelectorAll('th').forEach((th) => th.setAttribute('aria-sort', (th.dataset.field || th.dataset.k) === state.key ? (state.dir > 0 ? 'ascending' : 'descending') : 'none'));
+    const tdOf = (txt, cls) => { const td = mk('td', cls, txt == null ? '' : String(txt)); return td; };
+
+    // ---------- Frota ativa ----------
+    const FF = makeFilter(document.getElementById('fa-filtros'), ['Estado', 'MotivoNR', 'Make', 'CarGroup', 'Ownership', 'Fuel', 'KmFaixa'], () => redraw());
+    const vt = document.getElementById('tb-v');
+    const vSort = { key: 'Plate', dir: 1, nums: ['Mileage', 'ValorComIVA'] };
+    const gt = document.getElementById('tb-group');
+    const gSort = { key: 'n', dir: -1, nums: ['n', 'ocupacao', 'alugadas'] };
+    const leg = document.getElementById('leg-estado');
+    ESTADOS.forEach((e) => { const s = mk('span'); const i = mk('i'); i.style.background = colOf(e); s.append(i, e === 'Non Revenue' ? 'Non Revenue (NRT)' : e); leg.appendChild(s); });
+    document.getElementById('q').addEventListener('input', () => drawFrota());
+    sortable(vt, vSort, () => drawFrota());
+    sortable(gt, gSort, () => drawFrota());
+    gt.querySelector('tbody').addEventListener('click', (ev) => { const tr = ev.target.closest('tr[data-g]'); if (tr) FF.toggle('CarGroup', tr.dataset.g); });
+
+    function drawFrota() {
+      const f = dash.data('frota');
+      const ok = f.status === 'ok';
+      FF.set(ok ? f.data : []);
+      FF.render();
+      const CH = ['ch-loc', 'ch-nr', 'ch-make', 'ch-own', 'ch-km'].map((id) => document.getElementById(id));
+      const take = document.getElementById('takeaway');
+      if (!ok) {
+        setKpis(document.getElementById('kpis'), null, f.status);
+        take.textContent = '—'; take.classList.toggle('dash-skeleton', f.status === 'loading');
+        CH.forEach((b) => failOrWait(b, f.status));
+        vt.querySelector('tbody').replaceChildren(); gt.querySelector('tbody').replaceChildren();
+        document.getElementById('cnt').textContent = f.status === 'error' ? 'Failed to load' : '';
+        return;
+      }
+      const rows = FF.filtered();
+      const o = countBy(rows, () => 'all')[0] || { n: 0, alugadas: 0, disponiveis: 0, nonrev: 0, valor: 0 };
+      const km = rows.map((r) => Number(r.Mileage)).filter((v) => v > 0);
+      setKpis(document.getElementById('kpis'), {
+        total: fInt(o.n), ocupacao: o.n ? fPct(o.alugadas / o.n) : null, alugadas: fInt(o.alugadas), disponiveis: fInt(o.disponiveis),
+        nonrev: fInt(o.nonrev), valor: fEur(o.valor), kmMedio: km.length ? `${fKm(d3.mean(km))} km médios` : null,
+      }, 'ok');
+      take.classList.remove('dash-skeleton');
+      take.textContent = o.n
+        ? `${FF.active() ? 'Com os filtros escolhidos' : 'Na frota ativa'}, ${fPct(o.alugadas / o.n)} das ${fInt(o.n)} viaturas estão alugadas; ${fInt(o.disponiveis)} disponíveis e ${fInt(o.nonrev)} em NRT (Non Revenue). Localização, situação e km vêm do WheelSys, atualizados todos os dias às 11h.`
+        : 'Nenhuma viatura com estes filtros.';
+      const loc = curLocOrNull();
+      const estSel = (d, s) => FF.st.Estado.size ? FF.st.Estado.has(s.e) : true;
+      const onEst = (d, s) => FF.toggle('Estado', s.e);
+
+      // Situação por localização
+      const rl = FF.filtered('loc');
+      const li = LOCS.map((l) => ({ ...(countBy(rl.filter((r) => r.Localizacao === l), () => l)[0] || { k: l, n: 0, alugadas: 0, disponiveis: 0, nonrev: 0 }), k: l }));
+      chart(CH[0], li.some((d) => d.n) ? li : [], {
+        stacked: true, max: d3.max(li, (d) => d.n), label: (d) => d.k.replace(' Aeroporto', ''), segs: estSegs, tipHead: (d) => d.k, tipLines: estTip,
+        onClick: (d) => dash.setParams({ loc: loc === d.k ? null : d.k }), isSel: (d) => loc === d.k, onSeg: onEst, segSel: estSel,
+      });
+
+      // NRT por motivo
+      const mot = countBy(FF.filtered('MotivoNR').filter((r) => r.Estado === 'Non Revenue'), (r) => r.MotivoNR || 'Sem motivo').sort((a, b) => b.n - a.n);
+      chart(CH[1], mot, {
+        max: d3.max(mot, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: colOf('Non Revenue') }],
+        valText: (d) => `${fInt(d.n)} · Ø ${diasTxt(avgD(d))}`,
+        tipHead: (d) => d.k, tipLines: (d) => [[null, `${fInt(d.n)} viaturas`], [null, `Média: ${diasTxt(avgD(d))} imobilizada`], [null, `Máximo: ${diasTxt(d.maxd)}`]],
+        onClick: (d) => FF.toggle('MotivoNR', d.k), isSel: (d) => FF.st.MotivoNR.has(d.k),
+      }, 'Sem viaturas em NRT com estes filtros.');
+
+      // Marca
+      const mk1 = countBy(FF.filtered('Make'), (r) => r.Make || 'Sem marca').sort((a, b) => b.n - a.n);
+      chart(CH[2], mk1, {
+        stacked: true, max: d3.max(mk1, (d) => d.n), label: (d) => d.k,
+        segs: (d) => [{ v: d.alugadas, c: '#00f2d7', e: 'Alugada' }, { v: d.n - d.alugadas, c: 'var(--cds-chart-muted)', e: null }],
+        tipHead: (d) => d.k, tipLines: estTip, onClick: (d) => FF.toggle('Make', d.k), isSel: (d) => FF.st.Make.has(d.k),
+      });
+
+      // Contrato
+      const ow = countBy(FF.filtered('Ownership'), (r) => r.Ownership || 'Sem informação').sort((a, b) => b.n - a.n);
+      chart(CH[3], ow, {
+        stacked: true, max: d3.max(ow, (d) => d.n), label: (d) => d.k, segs: estSegs, tipHead: (d) => d.k, tipLines: estTip,
+        onClick: (d) => FF.toggle('Ownership', d.k), isSel: (d) => FF.st.Ownership.has(d.k), onSeg: onEst, segSel: estSel,
+      });
+
+      // Km
+      const kord = DIMS.KmFaixa.order;
+      const kmI = countBy(FF.filtered('KmFaixa'), faixaKm).sort((a, b) => kord.indexOf(a.k) - kord.indexOf(b.k));
+      chart(CH[4], kmI, {
+        stacked: true, max: d3.max(kmI, (d) => d.n), label: (d) => d.k, segs: estSegs, tipHead: (d) => d.k, tipLines: estTip,
+        onClick: (d) => FF.toggle('KmFaixa', d.k), isSel: (d) => FF.st.KmFaixa.has(d.k), onSeg: onEst, segSel: estSel,
+      });
+
+      // Grupos
+      const gr = countBy(FF.filtered('CarGroup'), (r) => r.CarGroup || 'Sem grupo').map((d) => ({ ...d, ocupacao: d.n ? d.alugadas / d.n : null }));
+      sortRows(gr, gSort.key, gSort.dir, gSort.nums); markSort(gt, gSort);
+      const gmax = d3.max(gr, (d) => d.n) || 1;
+      gt.querySelector('tbody').replaceChildren(...gr.map((d) => {
+        const tr = mk('tr', `fx-click${FF.st.CarGroup.has(d.k) ? ' fx-sel' : ''}`); tr.dataset.g = d.k;
+        const bar = mk('div', 'fx-bar'); bar.style.width = `${Math.max(12, (d.n / gmax) * 100)}%`;
+        ESTADOS.forEach((e) => { const sp = mk('span'); sp.style.width = `${(byEst(d)[e] / d.n) * 100}%`; sp.style.background = colOf(e); bar.appendChild(sp); });
+        const tdb = mk('td'); tdb.appendChild(bar);
+        tr.append(tdOf(d.k), tdOf(fInt(d.n), 'num'), tdOf(d.ocupacao == null ? '' : fPct(d.ocupacao), 'num'), tdb);
         return tr;
       }));
+
+      // Tabela de viaturas
+      const q = document.getElementById('q').value.trim().toLowerCase();
+      let vr = q ? rows.filter((r) => [r.Plate, r.Model, r.Make, r.CarGroup, r.Situacao, r.Ownership, r.Fuel].join(' ').toLowerCase().includes(q)) : rows.slice();
+      sortRows(vr, vSort.key, vSort.dir, vSort.nums); markSort(vt, vSort);
+      vt.querySelector('tbody').replaceChildren(...vr.map((r) => {
+        const tr = mk('tr');
+        [[r.Plate], [r.Make], [r.Model, 'wrap'], [r.CarGroup], [r.Ownership], [r.Fuel],
+          [r.Mileage == null || r.Mileage === '' ? '' : fKm(r.Mileage), 'num'], [r.FirstLicense ? d3.utcFormat('%d/%m/%Y')(new Date(r.FirstLicense)) : ''],
+          [fEurFull(r.ValorComIVA), 'num'], [r.Localizacao]].forEach(([v, c]) => tr.appendChild(tdOf(v, c)));
+        const td = mk('td'); const p = mk('span', 'fx-pill', r.Situacao); p.style.borderColor = colOf(r.Estado); td.appendChild(p); tr.appendChild(td);
+        return tr;
+      }));
+      document.getElementById('cnt').textContent = `${fInt(vr.length)} viaturas`;
+    }
+
+    // ---------- NRT ----------
+    const NF = makeFilter(document.getElementById('nrt-filtros'), ['MotivoNR', 'Faixa', 'Make', 'CarGroup', 'Ownership', 'Fuel'], () => redraw());
+    const FAIXA_C = ['#7fd8c9', '#3987e5', '#e0a537', '#d9614f', '#a8324a', 'var(--cds-chart-muted)'];
+    const nt = document.getElementById('tb-nrt');
+    const nSort = { key: 'DiasImobilizacao', dir: -1, nums: ['Mileage', 'DiasImobilizacao', 'DiasPrevistos'] };
+    let nRowsShown = [];
+    document.getElementById('nq').addEventListener('input', () => drawNrt());
+    sortable(nt, nSort, () => drawNrt());
+    const diasCor = (d) => FAIXA_C[Math.max(0, DIMS.Faixa.order.indexOf(faixaDias({ DiasImobilizacao: d })))];
+    const diasTip = (d) => [[null, `${fInt(d.n)} viaturas`], [null, `Média: ${diasTxt(avgD(d))} imobilizada`], [null, `Máximo: ${diasTxt(d.maxd)}`], [null, `Valor c/ IVA: ${fEurFull(d.valor)}`]];
+    document.getElementById('nrt-csv').addEventListener('click', () => {
+      const cols = [...nt.querySelectorAll('th')].map((th) => [th.dataset.field, th.textContent.trim()]);
+      const esc = (v) => { const s = v == null ? '' : String(v); return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+      const val = (r, k) => ['NRTInicio', 'NRTFimPrevisto'].includes(k) ? `${dFmt(r[k])} ${String(r[k] || '').slice(11, 16)}`.trim() : r[k];
+      const lines = [cols.map((c) => c[1]).join(';'), ...nRowsShown.map((r) => cols.map(([k]) => esc(val(r, k))).join(';'))];
+      const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quadro_nrt.csv'; document.body.append(a); a.click(); a.remove();
+    });
+
+    function drawNrt() {
+      const f = dash.data('frota');
+      const ok = f.status === 'ok';
+      const all = ok ? f.data : [];
+      NF.set(all.filter((r) => r.Estado === 'Non Revenue'));
+      NF.render();
+      const CH = ['ch-nrt-faixa', 'ch-nrt-motivo', 'ch-nrt-loc', 'ch-nrt-make'].map((id) => document.getElementById(id));
+      const take = document.getElementById('nrt-take');
+      if (!ok) {
+        setKpis(document.getElementById('nrt-kpis'), null, f.status);
+        take.textContent = '—'; take.classList.toggle('dash-skeleton', f.status === 'loading');
+        CH.forEach((b) => failOrWait(b, f.status));
+        nt.querySelector('tbody').replaceChildren(); nRowsShown = [];
+        document.getElementById('ncnt').textContent = f.status === 'error' ? 'Failed to load' : '';
+        return;
+      }
+      const loc = curLocOrNull();
+      const rows = NF.filtered();
+      const frotaLoc = all.filter((r) => !loc || r.Localizacao === loc).length;
+      const ds = rows.filter((r) => r.DiasImobilizacao != null && r.DiasImobilizacao !== '').map((r) => Number(r.DiasImobilizacao));
+      const m30 = ds.filter((d) => d > 30).length;
+      const late = rows.filter((r) => r.NRTAtrasada === true || r.NRTAtrasada === 'true').length;
+      const valor = d3.sum(rows, (r) => Number(r.ValorComIVA) || 0);
+      setKpis(document.getElementById('nrt-kpis'), {
+        n: fInt(rows.length), pct: frotaLoc ? `${fPct(rows.length / frotaLoc)} da frota ativa${loc ? ' em ' + loc.replace(' Aeroporto', '') : ''}` : null,
+        media: ds.length ? diasTxt(d3.mean(ds)) : null, mediana: ds.length ? `mediana de ${diasTxt(d3.median(ds))}` : null,
+        m30: fInt(m30), late: fInt(late), soma: fInt(d3.sum(ds)), valor: fEur(valor),
+      }, 'ok');
+      take.classList.remove('dash-skeleton');
+      const oldest = rows.slice().sort((a, b) => (Number(b.DiasImobilizacao) || 0) - (Number(a.DiasImobilizacao) || 0))[0];
+      take.textContent = rows.length
+        ? `${fInt(rows.length)} viaturas em NRT${NF.active() ? ' com os filtros escolhidos' : ''}, imobilizadas em média ${diasTxt(d3.mean(ds))}; ${fInt(m30)} estão paradas há mais de 30 dias${late ? ` e ${fInt(late)} ${late === 1 ? 'já passou' : 'já passaram'} a data de fim prevista` : ''}.${oldest ? ` A mais antiga é a ${oldest.Plate} (${oldest.Make} ${oldest.Model}, ${oldest.MotivoNR || 'sem motivo'}), com ${diasTxt(Number(oldest.DiasImobilizacao))}.` : ''}`
+        : 'Nenhuma viatura em NRT com estes filtros.';
+
+      // Dias por escalão
+      const ford = DIMS.Faixa.order;
+      const fa = countBy(NF.filtered('Faixa'), faixaDias).sort((a, b) => ford.indexOf(a.k) - ford.indexOf(b.k));
+      chart(CH[0], fa, {
+        max: d3.max(fa, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: FAIXA_C[ford.indexOf(d.k)] }],
+        tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => NF.toggle('Faixa', d.k), isSel: (d) => NF.st.Faixa.has(d.k),
+      });
+      // Motivo
+      const mo = countBy(NF.filtered('MotivoNR'), (r) => r.MotivoNR || 'Sem motivo').sort((a, b) => b.n - a.n);
+      chart(CH[1], mo, {
+        max: d3.max(mo, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: diasCor(avgD(d)) }],
+        valText: (d) => `${fInt(d.n)} · Ø ${diasTxt(avgD(d))}`,
+        tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => NF.toggle('MotivoNR', d.k), isSel: (d) => NF.st.MotivoNR.has(d.k),
+      });
+      // Aeroporto
+      const rl = NF.filtered('loc');
+      const la = LOCS.map((l) => ({ ...(countBy(rl.filter((r) => r.Localizacao === l), () => l)[0] || { n: 0, nd: 0, dias: 0, maxd: 0, valor: 0 }), k: l }));
+      chart(CH[2], la.some((d) => d.n) ? la : [], {
+        max: d3.max(la, (d) => d.n), label: (d) => d.k.replace(' Aeroporto', ''), segs: (d) => [{ v: d.n, c: diasCor(avgD(d)) }],
+        valText: (d) => d.n ? `${fInt(d.n)} · Ø ${diasTxt(avgD(d))}` : '0',
+        tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => dash.setParams({ loc: loc === d.k ? null : d.k }), isSel: (d) => loc === d.k,
+      });
+      // Marca
+      const ma = countBy(NF.filtered('Make'), (r) => r.Make || 'Sem marca').sort((a, b) => b.n - a.n);
+      chart(CH[3], ma, {
+        max: d3.max(ma, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: diasCor(avgD(d)) }],
+        valText: (d) => `${fInt(d.n)} · Ø ${diasTxt(avgD(d))}`,
+        tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => NF.toggle('Make', d.k), isSel: (d) => NF.st.Make.has(d.k),
+      });
+
+      // Quadro NRT
+      const q = document.getElementById('nq').value.trim().toLowerCase();
+      const tr0 = q ? rows.filter((r) => [r.Plate, r.Make, r.Model, r.CarGroup, r.NRTNo, r.MotivoNR, r.NRTObs, r.Ownership].join(' ').toLowerCase().includes(q)) : rows.slice();
+      sortRows(tr0, nSort.key, nSort.dir, nSort.nums); markSort(nt, nSort);
+      nRowsShown = tr0;
+      const dmax = d3.max(tr0, (r) => Number(r.DiasImobilizacao) || 0) || 1;
+      nt.querySelector('tbody').replaceChildren(...tr0.map((r) => {
+        const isLate = r.NRTAtrasada === true || r.NRTAtrasada === 'true';
+        const tr = mk('tr', isLate ? 'fx-late' : null);
+        [[r.Plate], [r.Make], [r.Model, 'wrap'], [r.CarGroup], [r.Ownership], [r.Mileage == null || r.Mileage === '' ? '' : fKm(r.Mileage), 'num'],
+          [String(r.Localizacao || '').replace(' Aeroporto', '')], [r.MotivoNR], [r.NRTNo], [dFmt(r.NRTInicio)]].forEach(([v, c]) => tr.appendChild(tdOf(v, c)));
+        const tdF = mk('td', null, dFmt(r.NRTFimPrevisto));
+        if (isLate) tdF.appendChild(mk('span', 'fx-late-t', ' · ultrapassado'));
+        tr.appendChild(tdF);
+        const tdD = mk('td', 'num'); const box = mk('span', 'fx-dbar');
+        const dd = r.DiasImobilizacao == null || r.DiasImobilizacao === '' ? null : Number(r.DiasImobilizacao);
+        if (dd != null) { const i = mk('i'); i.style.width = `${Math.max(2, (dd / dmax) * 70)}px`; i.style.background = diasCor(dd); box.append(i, mk('span', null, fInt(dd))); }
+        tdD.appendChild(box); tr.appendChild(tdD);
+        tr.appendChild(tdOf(r.DiasPrevistos == null || r.DiasPrevistos === '' ? '' : fInt(r.DiasPrevistos), 'num'));
+        tr.appendChild(tdOf(r.NRTObs, 'fx-obs'));
+        return tr;
+      }));
+      document.getElementById('ncnt').textContent = `${fInt(tr0.length)} viaturas`;
     }
 
     // Tabs
     let tab = 'fleet';
-    const PAGES = { fleet: 'fleet-to-sell', vender: 'por-vender', frota: 'frota-ativa' };
+    const PAGES = { fleet: 'fleet-to-sell', vender: 'por-vender', frota: 'frota-ativa', nrt: 'nrt', vendidas: 'vendidas' };
     const showTab = (t, link) => {
       tab = t;
       document.querySelectorAll('.fx-tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
       Object.entries(PAGES).forEach(([k, id]) => { document.getElementById(id).hidden = k !== t; });
-      seg.hidden = t === 'fleet';
+      seg.hidden = t === 'fleet' || t === 'vendidas';
       if (link) dash.setLink(PAGES[t]);
       redraw();
     };
     const fts = window.FTS.mount(document.getElementById('fts-root'), { colors: ['#00f2d7', '#3987e5', '#e0a537', '#d9614f'], markSource: 'frota', idp: 'fts' });
     let ftsData = null;
+    const VCOLS = [
+      { k: 'Plate', l: 'Plate', t: 'text' },
+      { k: 'Make', l: 'Marca', t: 'cat' },
+      { k: 'Model', l: 'Modelo', t: 'cat', search: true },
+      { k: 'DataVenda', l: 'Data de venda', t: 'date' },
+      { k: 'CompraComIVA', l: 'Valor de compra c/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'VendaComIVA', l: 'Valor de venda c/ IVA', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
+      { k: 'MesesFrota', l: 'Tempo em frota (meses)', t: 'range', num: true, dec: true, foot: 'avg' },
+      { k: 'HoldingCost', l: 'Holding cost mensal s/ IVA', t: 'range', num: true, eur: true, hl: true, foot: 'avg' },
+      { k: 'Mileage', l: 'Kms', t: 'range', num: true },
+      { k: 'Cliente', l: 'Cliente', t: 'cat', search: true },
+      { k: 'VIN', l: 'Vin', t: 'text' },
+      { k: 'Ownership', l: 'Ownership', t: 'cat' },
+      { k: 'CarGroup', l: 'Car group', t: 'cat' },
+      { k: 'Fuel', l: 'Fuel Type', t: 'cat' },
+      { k: 'Fatura', l: 'Fatura', t: 'text' },
+      { k: 'AnoVenda', l: 'Ano de venda', t: 'cat' },
+      { k: 'CompraSemIVA', l: 'Compra s/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'VendaSemIVA', l: 'Venda s/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'DataEntrada', l: 'Entrada em frota', t: 'date' },
+      { k: 'DataSaida', l: 'Saída de frota', t: 'date' },
+    ];
+    const mean = (rows, k) => { const v = rows.map((r) => r[k]).filter((x) => x != null && x !== '').map(Number); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+    const vsum = (rows, k) => rows.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+    const vend = window.FTS.mount(document.getElementById('vend-root'), {
+      cols: VCOLS, valueKey: 'VendaComIVA', idp: 'vend', markSource: 'vendidas', block: false, csv: true, csvName: 'viaturas_vendidas.csv',
+      colors: ['#00f2d7', '#3987e5', '#e0a537', '#d9614f'],
+      title: 'VIATURAS VENDIDAS',
+      sub: 'Viaturas vendidas (ficheiros de vendas 2024, 2025 e 2026), com a compra e a venda c/ IVA (valor s/ IVA × 1,23), o tempo em frota do WheelSys (entrada → saída de frota) e o holding cost mensal s/ IVA = (compra s/ IVA − venda s/ IVA) ÷ meses em frota.',
+      optional: ['VIN', 'Ownership', 'CarGroup', 'Fuel', 'Fatura', 'AnoVenda', 'CompraSemIVA', 'VendaSemIVA', 'DataEntrada', 'DataSaida'],
+      headf: { Make: 'cat', Model: 'cat', Cliente: 'cat', DataVenda: 'range', VendaComIVA: 'range', MesesFrota: 'range', HoldingCost: 'range' },
+      breaks: [['AnoVenda', 'Por ano de venda'], ['Make', 'Por marca'], ['Cliente', 'Por cliente'], ['Ownership', 'Por contrato']],
+      breakNote: 'Viaturas e valor de venda c/ IVA. Clique para filtrar.',
+      searchKeys: ['Plate', 'VIN', 'Model', 'Cliente', 'Fatura'], searchPh: 'Procurar Plate, Vin, Model, cliente ou fatura…',
+      sortK: 'DataVenda', sortD: -1,
+      kpis: [
+        { id: 'n', l: 'Viaturas vendidas', v: (rows, tot, f) => [f.nf.format(rows.length), rows.length === tot ? 'todas as vendas' : `de ${f.nf.format(tot)} vendidas`] },
+        { id: 'venda', l: 'Valor de venda c/ IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'VendaComIVA')), f.eur(vsum(rows, 'VendaComIVA'))] },
+        { id: 'compra', l: 'Valor de compra c/ IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'CompraComIVA')), f.eur(vsum(rows, 'CompraComIVA'))] },
+        { id: 'meses', l: 'Tempo médio em frota', v: (rows, tot, f) => { const m = mean(rows, 'MesesFrota'); const n = rows.filter((r) => r.MesesFrota != null).length; return [m == null ? '—' : `${f.nf1.format(m)} meses`, `${f.nf.format(n)} viaturas com registo na frota`]; } },
+        { id: 'hc', l: 'Holding cost mensal médio s/ IVA', v: (rows, tot, f) => { const m = mean(rows, 'HoldingCost'); return [m == null ? '—' : f.eur(m).replace(/,\d\d(?=\s?€)/, ''), 'por viatura e mês em frota']; } },
+      ],
+    });
+    let vendData = null;
     seg.hidden = true;
     document.querySelectorAll('.fx-tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab, true)));
 
@@ -1267,73 +1653,15 @@
         return;
       }
       if (tab === 'vender') { drawVender(); return; }
-      const w = `Localizacao=${enc(loc)}`;
-
-      // KPIs
-      const k = dash.data('kpi_loc');
-      document.querySelectorAll('#kpis [data-source="kpi_loc"], #takeaway').forEach((el) => { if (el.dataset.field) el.dataset.where = w; });
-      const take = document.getElementById('takeaway');
-      if (k.status === 'ok') {
-        const r = k.data.find((x) => x.Localizacao === loc);
-        document.querySelectorAll('#kpis [data-source="kpi_loc"]').forEach((el) => {
-          el.classList.remove('dash-skeleton');
-          const f = el.dataset.field, v = r ? r[f] : null;
-          el.textContent = v == null ? '—' : f === 'ocupacao' ? fPct(v) : f === 'valor' ? fEur(v) : f === 'kmMedio' ? `${fKm(v)} km médios` : fInt(v);
-        });
-        take.classList.remove('dash-skeleton');
-        take.textContent = r ? `${loc === 'Todas' ? 'Na frota ativa' : 'Em ' + loc}, ${fPct(r.ocupacao)} das ${fInt(r.total)} viaturas estão alugadas; ${fInt(r.disponiveis)} disponíveis e ${fInt(r.nonrev)} em Non Revenue. Localização e situação vêm do WheelSys, atualizadas todos os dias às 11h.` : '—';
-      } else {
-        document.querySelectorAll('#kpis [data-source="kpi_loc"]').forEach((el) => { el.textContent = '—'; el.classList.toggle('dash-skeleton', k.status === 'loading'); });
-        take.textContent = '—';
+      if (tab === 'nrt') { drawNrt(); return; }
+      if (tab === 'vendidas') {
+        const v = dash.data('vendidas');
+        if (v.status === 'ok' && v.data !== vendData) { vendData = v.data; vend.setRows(v.data); }
+        return;
       }
-
-      // Location chart
-      const le = dash.data('loc_estado'); const chL = document.getElementById('ch-loc');
-      if (le.status === 'ok') {
-        chL.classList.remove('dash-skeleton');
-        const items = LOCS.map((l) => ({ l, by: Object.fromEntries(ESTADOS.map((e) => [e, (le.data.find((r) => r.Localizacao === l && r.Estado === e) || {}).n || 0])) }));
-        const max = d3.max(items, (d) => d3.sum(ESTADOS, (e) => d.by[e]));
-        hbars(chL, items, {
-          stacked: true, max, label: (d) => d.l.replace(' Aeroporto', ''),
-          segs: (d) => ESTADOS.map((e) => ({ v: d.by[e], c: colOf(e) })),
-          tipHead: (d) => d.l,
-          tipLines: (d) => { const t = d3.sum(ESTADOS, (e) => d.by[e]); return ESTADOS.map((e) => [colOf(e), `${e}: ${fInt(d.by[e])} (${fPct(d.by[e] / t)})`]); },
-        });
-      } else failOrWait(chL, le.status);
-
-      // Non revenue chart
-      const nr = dash.data('nr_motivo'); const chN = document.getElementById('ch-nr');
-      if (nr.status === 'ok') {
-        chN.classList.remove('dash-skeleton');
-        const items = nr.data.filter((r) => r.Localizacao === loc).sort((a, b) => b.n - a.n);
-        if (!items.length) { chN.replaceChildren(); const p = document.createElement('p'); p.className = 'fx-note'; p.textContent = 'Sem viaturas em Non Revenue.'; chN.appendChild(p); }
-        else hbars(chN, items, {
-          max: d3.max(items, (d) => d.n), label: (d) => d.Motivo,
-          segs: (d) => [{ v: d.n, c: colOf('Non Revenue') }],
-          tipHead: (d) => d.Motivo, tipLines: (d) => [[null, `${fInt(d.n)} viaturas`]],
-        });
-      } else failOrWait(chN, nr.status);
-
-      // Make chart
-      const bm = dash.data('by_make'); const chM = document.getElementById('ch-make');
-      if (bm.status === 'ok') {
-        chM.classList.remove('dash-skeleton');
-        const items = bm.data.filter((r) => r.Localizacao === loc).sort((a, b) => b.n - a.n);
-        hbars(chM, items, {
-          stacked: true, max: d3.max(items, (d) => d.n), label: (d) => d.Make,
-          segs: (d) => [{ v: d.alugadas, c: '#00f2d7' }, { v: d.n - d.alugadas, c: 'var(--cds-chart-muted)' }],
-          tipHead: (d) => d.Make,
-          tipLines: (d) => [[null, `${fInt(d.n)} viaturas`], ['#00f2d7', `Alugadas: ${fInt(d.alugadas)} (${fPct(d.alugadas / d.n)})`]],
-        });
-      } else failOrWait(chM, bm.status);
-
-      drawGroups();
-
-      const f = dash.data('frota');
-      if (f.status === 'ok') { lastRows = f.data; drawTable(); }
-      else { lastRows = []; vt.querySelector('tbody').replaceChildren(); document.getElementById('cnt').textContent = f.status === 'error' ? 'Failed to load' : ''; }
+      drawFrota();
     };
-    if (location.hash === '#frota-ativa') showTab('frota', false); else redraw();
+    if (location.hash === '#frota-ativa') showTab('frota', false); else if (location.hash === '#nrt') showTab('nrt', false); else if (location.hash === '#vendidas') showTab('vendidas', false); else redraw();
   })();
 </script>
 
