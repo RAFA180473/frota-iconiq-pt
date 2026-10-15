@@ -59,16 +59,17 @@
   }
   async function load() {
     try {
-      const rv = await fetch('data/vendidas.json', { cache: 'no-store' });
-      const jv = await rv.json(); store.vendidas = { status: 'ok', data: jv.rows || jv.data || jv };
-    } catch (e) { store.vendidas = { status: 'error', data: [], message: String(e) }; }
-    try {
       const r = await fetch('data/frota_iconiq.json', { cache: 'no-store' });
       const j = await r.json();
       store.frota = { status: 'ok', data: j.rows || j };
       const u = document.getElementById('fx-updated');
       if (u && j.updated) u.textContent = `Dados atualizados em ${new Date(j.updated).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })} · Fonte: ficheiro master OpMargin-Fleet ICONIQ PT + WheelSys Vehicle List Report`;
     } catch (e) { store.frota = { status: 'error', data: [], message: String(e) }; }
+    try {
+      const r2 = await fetch('data/vendidas.json', { cache: 'no-store' });
+      const j2 = await r2.json();
+      store.vendidas = { status: 'ok', data: j2.rows || j2 };
+    } catch (e) { store.vendidas = { status: 'error', data: [], message: String(e) }; }
     compute(); run();
   }
   let w = 0; window.addEventListener('resize', () => { if (Math.abs(innerWidth - w) > 20) { w = innerWidth; run(); } });
