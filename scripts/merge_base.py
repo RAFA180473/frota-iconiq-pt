@@ -3,8 +3,8 @@ Usage: python3 -I merge_base.py <base.json> <wheelsys.csv> <out.json>
 wheelsys.csv: header Plate,Situacao,Localizacao[,Km]  (WheelSys statusname / station name in English, e.g. 'Lisbon Airport';
 Km = WheelSys 'mileage' field, current odometer).
 Vehicles whose WheelSys status is 'Defleeted' (or isdefleeted=1, written as Situacao 'Defleeted') are excluded.
-Mileage: WheelSys Km replaces the master-file Mileage when Km > 0 and Km >= master Mileage (odometer never goes back);
-otherwise the master value is kept and the plate is reported as a km anomaly."""
+Mileage: WheelSys Km is the exact reference and always replaces the master-file Mileage when present
+(the master value is kept only for vehicles without a WheelSys Km). Big differences vs master are only reported."""
 import sys, json, csv, re
 base, wcsv, out = sys.argv[1:4]
 rows = json.load(open(base))['rows']
@@ -31,11 +31,13 @@ for r in rows:
     r = dict(r, Situacao=sit or 'Sem registo WheelSys', Localizacao=loc_pt.get(loc, loc) or 'Sem registo WheelSys',
              Estado=estado(sit), MotivoNR=m.group(1).strip() if m else '')
     if km is not None:
-        if km > 0 and km >= num(r.get('Mileage')):
-            r['Mileage'] = km; r['MileageFonte'] = 'WheelSys'; kmupd += 1
-        else:
-            r['MileageFonte'] = 'Ficheiro master'; kmanom.append(f"{r['Plate']} (WheelSys {km}, master {r.get('Mileage')})")
+        mm = num(r.get('Mileage'))
+        if km == 0 or km < mm:
+            kmanom.append(f"{r['Plate']} (WheelSys {km}, master {r.get('Mileage')})")
+        r['Mileage'] = km; r['MileageFonte'] = 'WheelSys'; kmupd += 1
+    else:
+        r['MileageFonte'] = 'Ficheiro master'
     res.append(r)
 json.dump({'rows': res}, open(out, 'w'), ensure_ascii=False)
 print(f'{len(res)} viaturas no dashboard; {excl} excluídas por defleet; {missing} sem registo no WheelSys; '
-      f'{kmupd} km atualizados pelo WheelSys; anomalias de km: {kmanom or "nenhuma"}')
+      f'{kmupd} km atualizados pelo WheelSys; km WheelSys a 0 ou abaixo do master (informativo): {kmanom or "nenhuma"}')
