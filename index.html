@@ -873,6 +873,7 @@
           const td = el('td', [col.num && col.t !== 'cat' ? 'num' : '', col.hl ? 'hl' : ''].join(' ').trim() || null);
           if (col.k === 'Situacao' && r.Situacao) { const p = el('span', 'fts-pill', r.Situacao); td.append(p); }
           else td.textContent = cell(col, r);
+          if (col.neg && Number(r[col.k]) < 0) td.style.color = 'var(--color-bad, #e5484d)';
           tr.append(td);
         });
         frag.append(tr);
@@ -886,7 +887,7 @@
         const foot = col.foot || (col.k === 'Mileage' ? 'avg' : col.k === VK ? 'sum' : null);
         const vals = rows.map((r) => r[col.k]).filter((v) => v != null && v !== '' && !isNaN(Number(v))).map(Number);
         if (col.k === 'Plate') td.textContent = `${nf.format(rows.length)} viaturas`;
-        else if (foot === 'sum') td.textContent = col.eur ? eur(vals.reduce((a, v) => a + v, 0)) : nf.format(vals.reduce((a, v) => a + v, 0));
+        else if (foot === 'sum') { const sm = vals.reduce((a, v) => a + v, 0); td.textContent = col.eur ? eur(sm) : nf.format(sm); if (col.neg && sm < 0) td.style.color = 'var(--color-bad, #e5484d)'; }
         else if (foot === 'avg') { const pos = col.k === 'Mileage' ? vals.filter((v) => v > 0) : vals; td.textContent = pos.length ? `média ${col.eur ? eur(pos.reduce((a, v) => a + v, 0) / pos.length) : col.dec ? nf1.format(pos.reduce((a, v) => a + v, 0) / pos.length) : nf.format(pos.reduce((a, v) => a + v, 0) / pos.length)}` : ''; }
         fr.append(td);
       });
@@ -1538,13 +1539,13 @@
       { k: 'DataVenda', l: 'Data de venda', t: 'date' },
       { k: 'CompraSemIVA', l: 'Compra SEM IVA (Purchase price)', t: 'range', num: true, eur: true, foot: 'sum' },
       { k: 'VendaSemIVA', l: 'Venda SEM IVA (Salesprice net as in invoice)', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
-      { k: 'DifCompraVenda', l: 'Diferença compra − venda SEM IVA', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'DifVendaCompra', l: 'Diferença venda − compra SEM IVA', t: 'range', num: true, eur: true, neg: true, foot: 'sum' },
       { k: 'DepAcumulada', l: 'Depreciação total SEM IVA', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
       { k: 'MesesFrota', l: 'Idade em frota (meses)', t: 'range', num: true, dec: true, foot: 'avg' },
       { k: 'HoldingCost', l: 'Holding cost mensal SEM IVA', t: 'range', num: true, eur: true, hl: true, foot: 'avg' },
       { k: 'Mileage', l: 'Kms', t: 'range', num: true },
       { k: 'Cliente', l: 'Comprador', t: 'cat', search: true },
-      { k: 'CustoReal', l: 'Custo real SEM IVA (depreciação + dif. compra − venda)', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
+      { k: 'CustoReal', l: 'Custo real SEM IVA (depreciação − dif. venda − compra)', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
       { k: 'VIN', l: 'Vin', t: 'text' },
       { k: 'Ownership', l: 'Ownership', t: 'cat' },
       { k: 'CarGroup', l: 'Tipologia (car group)', t: 'cat' },
@@ -1564,7 +1565,7 @@
       cols: VCOLS, valueKey: 'VendaSemIVA', idp: 'vend', markSource: 'vendidas', block: false, csv: true, csvName: 'sales_sem_iva.csv',
       colors: ['#00f2d7', '#3987e5', '#e0a537', '#d9614f'],
       title: 'SALES · valores SEM IVA',
-      sub: 'Viaturas vendidas (ficheiros de vendas 2024, 2025 e 2026). TODOS OS VALORES SÃO SEM IVA: parte das viaturas foi vendida para fora de Portugal, por isso compra, venda e holding cost são apresentados SEM IVA para serem comparáveis. Compra = Purchase price e venda = Salesprice net as in invoice, dos ficheiros de vendas. Só viaturas com registo no WheelSys. Depreciação total SEM IVA = DEPRECIATION TOTAL do ficheiro OpMargin (2024 + 2025 + 2026; para viaturas já fora da folha OP MARGIN, soma da Depreciation das folhas Fleet PnL Report 2024, 2025 e 2026); quando esse valor é superior ao valor de venda, usa-se o Credit received do ficheiro de vendas. Idade em frota = meses entre a entrada e a saída de frota no WheelSys; diferença compra − venda = compra SEM IVA − venda SEM IVA; custo real = depreciação total + diferença compra − venda; holding cost mensal = custo real (holding cost total) ÷ meses em frota.',
+      sub: 'Viaturas vendidas (ficheiros de vendas 2024, 2025 e 2026). TODOS OS VALORES SÃO SEM IVA: parte das viaturas foi vendida para fora de Portugal, por isso compra, venda e holding cost são apresentados SEM IVA para serem comparáveis. Compra = Purchase price e venda = Salesprice net as in invoice, dos ficheiros de vendas. Só viaturas com registo no WheelSys. Depreciação total SEM IVA = DEPRECIATION TOTAL do ficheiro OpMargin (2024 + 2025 + 2026; para viaturas já fora da folha OP MARGIN, soma da Depreciation das folhas Fleet PnL Report 2024, 2025 e 2026); quando esse valor é superior ao valor de venda, usa-se o Credit received do ficheiro de vendas. Idade em frota = meses entre a entrada e a saída de frota no WheelSys; diferença venda − compra = venda SEM IVA − compra SEM IVA (negativa a vermelho, quando a viatura foi vendida abaixo do preço de compra); custo real = depreciação total − diferença venda − compra; holding cost mensal = custo real (holding cost total) ÷ meses em frota.',
       optional: ['VIN', 'Ownership', 'CarGroup', 'Fuel', 'Fatura', 'AnoVenda', 'DataEntrada', 'DataSaida', 'DepFonte', 'CreditReceived'],
       headf: { Make: 'cat', Model: 'cat', Cliente: 'cat', DataVenda: 'range', VendaSemIVA: 'range', DepAcumulada: 'range', CustoReal: 'range', MesesFrota: 'range', HoldingCost: 'range' },
       breaks: [['AnoVenda', 'Por ano de venda'], ['Make', 'Por marca'], ['Fuel', 'Por combustível'], ['Ownership', 'Por contrato']],
@@ -1577,7 +1578,7 @@
         { id: 'n', l: 'Viaturas vendidas', v: (rows, tot, f) => [f.nf.format(rows.length), rows.length === tot ? 'todas as vendas' : `de ${f.nf.format(tot)} vendidas`] },
         { id: 'venda', l: 'Valor de venda SEM IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'VendaSemIVA')), f.eur(vsum(rows, 'VendaSemIVA'))] },
         { id: 'compra', l: 'Valor de compra SEM IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'CompraSemIVA')), f.eur(vsum(rows, 'CompraSemIVA'))] },
-        { id: 'custo', l: 'Custo real SEM IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'CustoReal')), `depreciação + dif. compra − venda (${f.eurC(vsum(rows, 'DifCompraVenda'))})`] },
+        { id: 'custo', l: 'Custo real SEM IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'CustoReal')), `depreciação − dif. venda − compra (${f.eurC(vsum(rows, 'DifVendaCompra'))})`] },
         { id: 'dep', l: 'Depreciação total SEM IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'DepAcumulada')), f.eur(vsum(rows, 'DepAcumulada'))] },
         { id: 'meses', l: 'Idade média em frota', v: (rows, tot, f) => { const m = mean(rows, 'MesesFrota'); const n = rows.filter((r) => r.MesesFrota != null).length; return [m == null ? '—' : `${f.nf1.format(m)} meses`, `${f.nf.format(n)} viaturas com registo na frota`]; } },
         { id: 'hc', l: 'Holding cost mensal médio SEM IVA', v: (rows, tot, f) => { const m = mean(rows, 'HoldingCost'); return [m == null ? '—' : f.eur(m).replace(/,\d\d(?=\s?€)/, ''), 'por viatura e mês em frota']; } },
