@@ -299,7 +299,7 @@
     <section class="fx-kpis" id="v-kpis" aria-label="Indicadores de venda">
       <div class="fx-kpi"><span class="lbl">Viaturas por vender</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="n">—</span><span class="sub">sem defleet</span></div>
       <div class="fx-kpi"><span class="lbl">Valor de venda c/ IVA</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="comIVA">—</span><span class="sub">coluna COM IVA</span></div>
-      <div class="fx-kpi"><span class="lbl">Valor de venda s/ IVA</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="semIVA">—</span><span class="sub">residual + 3%</span></div>
+      <div class="fx-kpi"><span class="lbl">Valor de venda SEM IVA</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="semIVA">—</span><span class="sub">residual + 3%</span></div>
       <div class="fx-kpi"><span class="lbl">Valor residual</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="residual">—</span><span class="sub">compra − depreciação</span></div>
       <div class="fx-kpi"><span class="lbl">Margem</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="margem">—</span><span class="sub">venda c/ IVA − residual × 1,23</span></div>
       <div class="fx-kpi"><span class="lbl">Preço médio c/ IVA</span><span class="val dash-skeleton" data-source="venda_kpi" data-field="medio">—</span><span class="sub">por viatura</span></div>
@@ -347,7 +347,7 @@
             <th class="num" data-field="Mileage"><button type="button">Km</button></th>
             <th data-field="ExitDate"><button type="button">Saída prevista</button></th>
             <th class="num" data-field="Residual"><button type="button">Residual</button></th>
-            <th class="num" data-field="PrecoSemIVA"><button type="button">Venda s/ IVA</button></th>
+            <th class="num" data-field="PrecoSemIVA"><button type="button">Venda SEM IVA</button></th>
             <th class="num" data-field="ValorComIVA"><button type="button">Venda c/ IVA</button></th>
             <th class="num" data-field="Margem"><button type="button">Margem</button></th>
             <th data-field="Localizacao"><button type="button">Localização</button></th>
@@ -552,7 +552,7 @@
 
   dash.calc('venda_kpi', {
     title: 'Totais por vender',
-    description: 'Viaturas por vender e soma dos valores de venda c/ IVA, s/ IVA, residual e margem, por aeroporto e no total.',
+    description: 'Viaturas por vender e soma dos valores de venda c/ IVA, SEM IVA, residual e margem, por aeroporto e no total.',
     inputs: ['frota'],
     fn: (frota) => [['Todas', frota], ...['Lisboa Aeroporto', 'Porto Aeroporto', 'Faro Aeroporto'].map((l) => [l, frota.filter((r) => r.Localizacao === l)])].map(([loc, rs]) => {
       const s = (k) => rs.reduce((a, r) => a + (Number(r[k]) || 0), 0);
@@ -1536,17 +1536,17 @@
       { k: 'Make', l: 'Marca', t: 'cat' },
       { k: 'Model', l: 'Modelo', t: 'cat', search: true },
       { k: 'DataVenda', l: 'Data de venda', t: 'date' },
-      { k: 'CompraSemIVA', l: 'Compra s/ IVA (Purchase price)', t: 'range', num: true, eur: true, foot: 'sum' },
-      { k: 'VendaSemIVA', l: 'Venda s/ IVA (Salesprice net as in invoice)', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
-      { k: 'Dep2024', l: 'Depreciação 2024 s/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
-      { k: 'Dep2025', l: 'Depreciação 2025 s/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
-      { k: 'Dep2026', l: 'Depreciação 2026 s/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
-      { k: 'DepAcumulada', l: 'Depreciação total s/ IVA', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
-      { k: 'CompraCheck', l: 'Compra s/ IVA vs ficheiro master', t: 'cat' },
-      { k: 'CompraMaster', l: 'Compra s/ IVA no ficheiro master', t: 'range', num: true, eur: true },
-      { k: 'CompraDif', l: 'Dif. compra s/ IVA (vendas − master)', t: 'range', num: true, eur: true },
+      { k: 'CompraSemIVA', l: 'Compra SEM IVA (Purchase price)', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'VendaSemIVA', l: 'Venda SEM IVA (Salesprice net as in invoice)', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
+      { k: 'Dep2024', l: 'Depreciação 2024 SEM IVA', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'Dep2025', l: 'Depreciação 2025 SEM IVA', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'Dep2026', l: 'Depreciação 2026 SEM IVA', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'DepAcumulada', l: 'Depreciação total SEM IVA', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
+      { k: 'CompraCheck', l: 'Compra SEM IVA vs ficheiro master', t: 'cat' },
+      { k: 'CompraMaster', l: 'Compra SEM IVA no ficheiro master', t: 'range', num: true, eur: true },
+      { k: 'CompraDif', l: 'Dif. compra SEM IVA (vendas − master)', t: 'range', num: true, eur: true },
       { k: 'MesesFrota', l: 'Idade em frota (meses)', t: 'range', num: true, dec: true, foot: 'avg' },
-      { k: 'HoldingCost', l: 'Holding cost mensal s/ IVA', t: 'range', num: true, eur: true, hl: true, foot: 'avg' },
+      { k: 'HoldingCost', l: 'Holding cost mensal SEM IVA', t: 'range', num: true, eur: true, hl: true, foot: 'avg' },
       { k: 'Mileage', l: 'Kms', t: 'range', num: true },
       { k: 'Cliente', l: 'Comprador', t: 'cat', search: true },
       { k: 'VIN', l: 'Vin', t: 'text' },
@@ -1566,28 +1566,28 @@
     const vend = window.FTS.mount(document.getElementById('vend-root'), {
       cols: VCOLS, valueKey: 'VendaSemIVA', idp: 'vend', markSource: 'vendidas', block: false, csv: true, csvName: 'sales_sem_iva.csv',
       colors: ['#00f2d7', '#3987e5', '#e0a537', '#d9614f'],
-      title: 'SALES · valores s/ IVA',
-      sub: 'Viaturas vendidas (ficheiros de vendas 2024, 2025 e 2026). TODOS OS VALORES SÃO SEM IVA: parte das viaturas foi vendida para fora de Portugal, por isso compra, venda e holding cost são apresentados s/ IVA para serem comparáveis. Compra = Purchase price e venda = Salesprice net as in invoice, dos ficheiros de vendas. Só viaturas com registo no WheelSys. Depreciação total s/ IVA = DEPRECIATION TOTAL do ficheiro OpMargin (2024 + 2025 + 2026; para viaturas já fora da folha OP MARGIN, soma da Depreciation das folhas Fleet PnL Report 2024, 2025 e 2026). Compra vs ficheiro master compara o Purchase price dos ficheiros de vendas com o do ficheiro OpMargin (folhas Vehicles / Vehicles_ALL). Idade em frota = meses entre a entrada e a saída de frota no WheelSys; holding cost mensal = (compra − venda) ÷ meses em frota.',
+      title: 'SALES · valores SEM IVA',
+      sub: 'Viaturas vendidas (ficheiros de vendas 2024, 2025 e 2026). TODOS OS VALORES SÃO SEM IVA: parte das viaturas foi vendida para fora de Portugal, por isso compra, venda e holding cost são apresentados SEM IVA para serem comparáveis. Compra = Purchase price e venda = Salesprice net as in invoice, dos ficheiros de vendas. Só viaturas com registo no WheelSys. Depreciação total SEM IVA = DEPRECIATION TOTAL do ficheiro OpMargin (2024 + 2025 + 2026; para viaturas já fora da folha OP MARGIN, soma da Depreciation das folhas Fleet PnL Report 2024, 2025 e 2026). Compra vs ficheiro master compara o Purchase price dos ficheiros de vendas com o do ficheiro OpMargin (folhas Vehicles / Vehicles_ALL). Idade em frota = meses entre a entrada e a saída de frota no WheelSys; holding cost mensal = (compra − venda) ÷ meses em frota.',
       optional: ['VIN', 'Ownership', 'CarGroup', 'Fuel', 'Fatura', 'AnoVenda', 'DataEntrada', 'DataSaida', 'DepFonte'],
       headf: { Make: 'cat', Model: 'cat', Cliente: 'cat', DataVenda: 'range', VendaSemIVA: 'range', DepAcumulada: 'range', CompraCheck: 'cat', MesesFrota: 'range', HoldingCost: 'range' },
-      breaks: [['AnoVenda', 'Por ano de venda'], ['Make', 'Por marca'], ['Fuel', 'Por combustível'], ['Ownership', 'Por contrato'], ['CompraCheck', 'Compra s/ IVA: vendas vs ficheiro master']],
-      breakNote: 'Viaturas e valor de venda s/ IVA. Clique para filtrar.',
+      breaks: [['AnoVenda', 'Por ano de venda'], ['Make', 'Por marca'], ['Fuel', 'Por combustível'], ['Ownership', 'Por contrato'], ['CompraCheck', 'Compra SEM IVA: vendas vs ficheiro master']],
+      breakNote: 'Viaturas e valor de venda SEM IVA. Clique para filtrar.',
       searchKeys: ['Plate', 'VIN', 'Model', 'Cliente', 'Fatura'], searchPh: 'Procurar Plate, Vin, Model, comprador ou fatura…',
       sortK: 'DataVenda', sortD: -1,
       extra: salesExtra,
       onRender: (rows) => drawSalesCharts(rows),
       kpis: [
         { id: 'n', l: 'Viaturas vendidas', v: (rows, tot, f) => [f.nf.format(rows.length), rows.length === tot ? 'todas as vendas' : `de ${f.nf.format(tot)} vendidas`] },
-        { id: 'venda', l: 'Valor de venda s/ IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'VendaSemIVA')), f.eur(vsum(rows, 'VendaSemIVA'))] },
-        { id: 'compra', l: 'Valor de compra s/ IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'CompraSemIVA')), f.eur(vsum(rows, 'CompraSemIVA'))] },
-        { id: 'dep', l: 'Depreciação total s/ IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'DepAcumulada')), f.eur(vsum(rows, 'DepAcumulada'))] },
-        { id: 'chk', l: 'Compra s/ IVA diferente do master', v: (rows, tot, f) => { const d = rows.filter((r) => r.CompraCheck === 'Diferente').length; const ok = rows.filter((r) => r.CompraCheck === 'Igual').length; return [f.nf.format(d), `${f.nf.format(ok)} iguais · ${f.nf.format(rows.length - d - ok)} sem valor no master`]; } },
+        { id: 'venda', l: 'Valor de venda SEM IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'VendaSemIVA')), f.eur(vsum(rows, 'VendaSemIVA'))] },
+        { id: 'compra', l: 'Valor de compra SEM IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'CompraSemIVA')), f.eur(vsum(rows, 'CompraSemIVA'))] },
+        { id: 'dep', l: 'Depreciação total SEM IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'DepAcumulada')), f.eur(vsum(rows, 'DepAcumulada'))] },
+        { id: 'chk', l: 'Compra SEM IVA diferente do master', v: (rows, tot, f) => { const d = rows.filter((r) => r.CompraCheck === 'Diferente').length; const ok = rows.filter((r) => r.CompraCheck === 'Igual').length; return [f.nf.format(d), `${f.nf.format(ok)} iguais · ${f.nf.format(rows.length - d - ok)} sem valor no master`]; } },
         { id: 'meses', l: 'Idade média em frota', v: (rows, tot, f) => { const m = mean(rows, 'MesesFrota'); const n = rows.filter((r) => r.MesesFrota != null).length; return [m == null ? '—' : `${f.nf1.format(m)} meses`, `${f.nf.format(n)} viaturas com registo na frota`]; } },
-        { id: 'hc', l: 'Holding cost mensal médio s/ IVA', v: (rows, tot, f) => { const m = mean(rows, 'HoldingCost'); return [m == null ? '—' : f.eur(m).replace(/,\d\d(?=\s?€)/, ''), 'por viatura e mês em frota']; } },
+        { id: 'hc', l: 'Holding cost mensal médio SEM IVA', v: (rows, tot, f) => { const m = mean(rows, 'HoldingCost'); return [m == null ? '—' : f.eur(m).replace(/,\d\d(?=\s?€)/, ''), 'por viatura e mês em frota']; } },
       ],
     });
 
-    // SALES charts: best buyers, vehicle typology, season of the year, fleet age — all s/ IVA
+    // SALES charts: best buyers, vehicle typology, season of the year, fleet age — all SEM IVA
     function drawSalesCharts(rows) {
       const nfI = new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 0 });
       const nf1 = new Intl.NumberFormat('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -1609,11 +1609,11 @@
       salesExtra.replaceChildren();
       const sec = mk('div', 'sales-grid');
       // 1. Best buyers
-      const [c1, b1] = card('sales-compradores', 'Melhores compradores', 'Top 10 por valor de venda s/ IVA (viaturas · valor).');
-      hbarList(b1, group('Cliente').sort((a, b) => b.v - a.v).slice(0, 10).map((d) => ({ ...d, tip: `${d.k}: ${nfI.format(d.n)} viaturas · ${e0(d.v)} s/ IVA` })), '#00f2d7', (d) => `${nfI.format(d.n)} · ${eC(d.v)}`);
+      const [c1, b1] = card('sales-compradores', 'Melhores compradores', 'Top 10 por valor de venda SEM IVA (viaturas · valor).');
+      hbarList(b1, group('Cliente').sort((a, b) => b.v - a.v).slice(0, 10).map((d) => ({ ...d, tip: `${d.k}: ${nfI.format(d.n)} viaturas · ${e0(d.v)} SEM IVA` })), '#00f2d7', (d) => `${nfI.format(d.n)} · ${eC(d.v)}`);
       // 2. Typology
-      const [c2, b2] = card('sales-tipologia', 'Tipologia de viaturas', 'Por car group (WheelSys): viaturas e valor de venda s/ IVA; top 12.');
-      hbarList(b2, group('CarGroup').sort((a, b) => b.n - a.n).slice(0, 12).map((d) => ({ ...d, val: d.v, v: d.n, tip: `${d.k}: ${nfI.format(d.n)} viaturas · ${e0(d.v)} s/ IVA` })), '#3987e5', (d) => `${nfI.format(d.n)} · ${eC(d.val)}`);
+      const [c2, b2] = card('sales-tipologia', 'Tipologia de viaturas', 'Por car group (WheelSys): viaturas e valor de venda SEM IVA; top 12.');
+      hbarList(b2, group('CarGroup').sort((a, b) => b.n - a.n).slice(0, 12).map((d) => ({ ...d, val: d.v, v: d.n, tip: `${d.k}: ${nfI.format(d.n)} viaturas · ${e0(d.v)} SEM IVA` })), '#3987e5', (d) => `${nfI.format(d.n)} · ${eC(d.val)}`);
       // 3. Season of the year (month of sale, stacked by year)
       const [c3, b3] = card('sales-epoca', 'Época do ano', 'Viaturas vendidas por mês do ano, por ano de venda.');
       const MES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -1637,7 +1637,7 @@
         svg.append('text').attr('x', x(d.m) + x.bandwidth() / 2).attr('y', H - 6).attr('text-anchor', 'middle').attr('class', 'ax').text(d.m);
         if (d.tot) svg.append('text').attr('x', x(d.m) + x.bandwidth() / 2).attr('y', y(d.tot) - 3).attr('text-anchor', 'middle').attr('class', 'ax strong').text(nfI.format(d.tot));
         svg.append('rect').attr('x', x(d.m)).attr('width', x.bandwidth()).attr('y', mt).attr('height', H - mb - mt).attr('fill', 'transparent')
-          .on('mousemove', (ev) => { tip.replaceChildren(mk('div', 'h', d.m), ...years.filter((yy) => d[yy]).map((yy) => mk('div', null, `${yy}: ${nfI.format(d[yy])} viaturas`)), mk('div', null, `Total: ${nfI.format(d.tot)} · ${e0(d.v)} s/ IVA`)); tip.hidden = false; const r = b3.getBoundingClientRect(); tip.style.left = `${Math.min(ev.clientX - r.left + 10, r.width - 180)}px`; tip.style.top = `${ev.clientY - r.top + 10}px`; })
+          .on('mousemove', (ev) => { tip.replaceChildren(mk('div', 'h', d.m), ...years.filter((yy) => d[yy]).map((yy) => mk('div', null, `${yy}: ${nfI.format(d[yy])} viaturas`)), mk('div', null, `Total: ${nfI.format(d.tot)} · ${e0(d.v)} SEM IVA`)); tip.hidden = false; const r = b3.getBoundingClientRect(); tip.style.left = `${Math.min(ev.clientX - r.left + 10, r.width - 180)}px`; tip.style.top = `${ev.clientY - r.top + 10}px`; })
           .on('mouseleave', () => { tip.hidden = true; });
       });
       b3.append(svg.node(), tip);
@@ -1647,7 +1647,7 @@
       const [c4, b4] = card('sales-idade', 'Idade média da frota vendida', avg == null ? 'Sem registo de entrada/saída de frota para estas viaturas.' : `Média de ${nf1.format(avg)} meses em frota (${nfI.format(ages.length)} viaturas com registo). Distribuição por meses em frota.`);
       const BK = [[0, 3, '0–3 meses'], [3, 6, '3–6 meses'], [6, 9, '6–9 meses'], [9, 12, '9–12 meses'], [12, 18, '12–18 meses'], [18, 24, '18–24 meses'], [24, 1e9, 'Mais de 24 meses']];
       const byYear = years.map((yy) => { const a = rows.filter((r) => String(r.DataVenda || '').startsWith(yy) && r.MesesFrota != null).map((r) => Number(r.MesesFrota)); return a.length ? `${yy}: ${nf1.format(a.reduce((p, q) => p + q, 0) / a.length)} meses` : null; }).filter(Boolean);
-      hbarList(b4, BK.map(([lo, hi, k]) => { const sel = rows.filter((r) => r.MesesFrota != null && Number(r.MesesFrota) >= lo && Number(r.MesesFrota) < hi); return { k, n: sel.length, v: sel.length, val: sel.reduce((a, r) => a + (Number(r.VendaSemIVA) || 0), 0), tip: `${k}: ${nfI.format(sel.length)} viaturas · ${e0(sel.reduce((a, r) => a + (Number(r.VendaSemIVA) || 0), 0))} s/ IVA` }; }), '#e0a537', (d) => `${nfI.format(d.n)} · ${eC(d.val)}`);
+      hbarList(b4, BK.map(([lo, hi, k]) => { const sel = rows.filter((r) => r.MesesFrota != null && Number(r.MesesFrota) >= lo && Number(r.MesesFrota) < hi); return { k, n: sel.length, v: sel.length, val: sel.reduce((a, r) => a + (Number(r.VendaSemIVA) || 0), 0), tip: `${k}: ${nfI.format(sel.length)} viaturas · ${e0(sel.reduce((a, r) => a + (Number(r.VendaSemIVA) || 0), 0))} SEM IVA` }; }), '#e0a537', (d) => `${nfI.format(d.n)} · ${eC(d.val)}`);
       if (byYear.length) b4.append(mk('p', 'fx-note', `Idade média por ano de venda: ${byYear.join(' · ')}.`));
       sec.append(c1, c2, c3, c4);
       salesExtra.append(sec);
@@ -1715,7 +1715,7 @@
           el.textContent = v == null ? '—' : f === 'n' ? fInt(v) : f === 'medio' ? fEur0(v) : fEurC(v);
         });
         take.classList.remove('dash-skeleton');
-        take.textContent = r ? `${fInt(r.n)} viaturas por vender${loc === 'Todas' ? '' : ' em ' + loc}, com um valor de venda de ${fEur0(r.comIVA)} c/ IVA (${fEur0(r.semIVA)} s/ IVA) e uma margem de ${fEur0(r.margem)} sobre o valor residual.` : '—';
+        take.textContent = r ? `${fInt(r.n)} viaturas por vender${loc === 'Todas' ? '' : ' em ' + loc}, com um valor de venda de ${fEur0(r.comIVA)} c/ IVA (${fEur0(r.semIVA)} SEM IVA) e uma margem de ${fEur0(r.margem)} sobre o valor residual.` : '—';
         warn.hidden = !(r && r.semPreco);
         warn.textContent = r && r.semPreco ? `${fInt(r.semPreco)} viaturas sem preço de compra no ficheiro: o valor de venda não está calculado (aparece 65 €).` : '';
       } else {
