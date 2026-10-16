@@ -256,6 +256,18 @@
   .fts-actions { display: flex; gap: var(--cds-gap-sm); align-items: center; flex-wrap: wrap; }
   .fts-count { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
   .fx-page[hidden] { display: none !important; }
+  .sales-charts { min-width: 0; }
+  .sales-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: var(--cds-gap-md); }
+  .sales-card { gap: 6px; }
+  .sales-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .sales-bar { display: grid; grid-template-columns: minmax(6rem, 42%) 1fr auto; align-items: center; gap: 8px; font-size: var(--cds-font-size-caption); padding: 2px 0; }
+  .sales-bar .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-fg); }
+  .sales-bar .b { height: 10px; border-radius: 4px; background: var(--cds-chart-grid); overflow: hidden; }
+  .sales-bar .b i { display: block; height: 100%; border-radius: 4px; }
+  .sales-bar .v { font-variant-numeric: tabular-nums; color: var(--color-fg-muted); white-space: nowrap; }
+  .sales-body svg text.ax { fill: var(--color-fg-muted); font-size: 11px; font-family: var(--font-anthropic-sans); }
+  .sales-body svg text.ax.strong { fill: var(--color-fg); }
+  #vend-root .fts-sub { color: var(--color-fg); }
 </style>
 
 <div class="fx">
@@ -275,7 +287,7 @@
     <button type="button" role="tab" id="tabbtn-fleet" data-tab="fleet" aria-selected="true">FLEET TO SELL</button>
     <button type="button" role="tab" id="tabbtn-frota" data-tab="frota" aria-selected="false">Frota ativa</button>
     <button type="button" role="tab" id="tabbtn-nrt" data-tab="nrt" aria-selected="false">NRT</button>
-    <button type="button" role="tab" id="tabbtn-vendidas" data-tab="vendidas" aria-selected="false">Vendidas</button>
+    <button type="button" role="tab" id="tabbtn-vendidas" data-tab="vendidas" aria-selected="false">SALES</button>
   </nav>
 
   <div class="fx-page" id="fleet-to-sell">
@@ -1006,7 +1018,7 @@
     aApp.addEventListener('click', () => { copyTable(); });
     aWa.addEventListener('click', (e) => { if (nifClean() && !nifValid(nifClean())) { bNote.textContent = 'Atenção: o NIF não parece válido. A mensagem segue na mesma; confirme antes de enviar.'; } });
     block.hidden = true;
-    root.append(top, kpis, filters, chips, grid, count, colbar, ...(opts.block === false ? [] : [block]), tbox);
+    root.append(top, kpis, filters, chips, ...(opts.extra ? [opts.extra] : []), grid, count, colbar, ...(opts.block === false ? [] : [block]), tbox);
 
     function render() {
       const rows = renderTable();
@@ -1017,6 +1029,7 @@
         opts.kpis.forEach((x) => { const [v, s2] = x.v(rows, tot, { nf, nf1, eur, eurC }); K[x.id].textContent = v; K[x.id + 's'].textContent = s2 || ''; });
         count.textContent = rows.length === tot ? `${nf.format(tot)} viaturas` : `${nf.format(rows.length)} de ${nf.format(tot)} viaturas com os filtros aplicados`;
         renderChips(); renderBreaks(rows); renderHeadLabels();
+        if (opts.onRender) { try { opts.onRender(rows); } catch (e) { console.error(e); } }
         if (openDd) fillPop(openDd.c, openDd.d);
         return;
       }
@@ -1523,44 +1536,122 @@
       { k: 'Make', l: 'Marca', t: 'cat' },
       { k: 'Model', l: 'Modelo', t: 'cat', search: true },
       { k: 'DataVenda', l: 'Data de venda', t: 'date' },
-      { k: 'CompraComIVA', l: 'Valor de compra c/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
-      { k: 'VendaComIVA', l: 'Valor de venda c/ IVA', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
-      { k: 'MesesFrota', l: 'Tempo em frota (meses)', t: 'range', num: true, dec: true, foot: 'avg' },
+      { k: 'CompraSemIVA', l: 'Compra s/ IVA (Purchase price)', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'VendaSemIVA', l: 'Venda s/ IVA (Salesprice net as in invoice)', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
+      { k: 'Dep2024', l: 'Depreciação 2024 s/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'Dep2025', l: 'Depreciação 2025 s/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'Dep2026', l: 'Depreciação 2026 s/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
+      { k: 'DepAcumulada', l: 'Depreciação total s/ IVA', t: 'range', num: true, eur: true, hl: true, foot: 'sum' },
+      { k: 'CompraCheck', l: 'Compra s/ IVA vs ficheiro master', t: 'cat' },
+      { k: 'CompraMaster', l: 'Compra s/ IVA no ficheiro master', t: 'range', num: true, eur: true },
+      { k: 'CompraDif', l: 'Dif. compra s/ IVA (vendas − master)', t: 'range', num: true, eur: true },
+      { k: 'MesesFrota', l: 'Idade em frota (meses)', t: 'range', num: true, dec: true, foot: 'avg' },
       { k: 'HoldingCost', l: 'Holding cost mensal s/ IVA', t: 'range', num: true, eur: true, hl: true, foot: 'avg' },
       { k: 'Mileage', l: 'Kms', t: 'range', num: true },
-      { k: 'Cliente', l: 'Cliente', t: 'cat', search: true },
+      { k: 'Cliente', l: 'Comprador', t: 'cat', search: true },
       { k: 'VIN', l: 'Vin', t: 'text' },
       { k: 'Ownership', l: 'Ownership', t: 'cat' },
-      { k: 'CarGroup', l: 'Car group', t: 'cat' },
+      { k: 'CarGroup', l: 'Tipologia (car group)', t: 'cat' },
       { k: 'Fuel', l: 'Fuel Type', t: 'cat' },
       { k: 'Fatura', l: 'Fatura', t: 'text' },
       { k: 'AnoVenda', l: 'Ano de venda', t: 'cat' },
-      { k: 'CompraSemIVA', l: 'Compra s/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
-      { k: 'VendaSemIVA', l: 'Venda s/ IVA', t: 'range', num: true, eur: true, foot: 'sum' },
       { k: 'DataEntrada', l: 'Entrada em frota', t: 'date' },
       { k: 'DataSaida', l: 'Saída de frota', t: 'date' },
+      { k: 'DepFonte', l: 'Origem da depreciação', t: 'cat' },
     ];
+
     const mean = (rows, k) => { const v = rows.map((r) => r[k]).filter((x) => x != null && x !== '').map(Number); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
     const vsum = (rows, k) => rows.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+    const salesExtra = document.createElement('div'); salesExtra.className = 'sales-charts';
     const vend = window.FTS.mount(document.getElementById('vend-root'), {
-      cols: VCOLS, valueKey: 'VendaComIVA', idp: 'vend', markSource: 'vendidas', block: false, csv: true, csvName: 'viaturas_vendidas.csv',
+      cols: VCOLS, valueKey: 'VendaSemIVA', idp: 'vend', markSource: 'vendidas', block: false, csv: true, csvName: 'sales_sem_iva.csv',
       colors: ['#00f2d7', '#3987e5', '#e0a537', '#d9614f'],
-      title: 'VIATURAS VENDIDAS',
-      sub: 'Viaturas vendidas (ficheiros de vendas 2024, 2025 e 2026), com a compra e a venda c/ IVA (valor s/ IVA × 1,23), o tempo em frota do WheelSys (entrada → saída de frota) e o holding cost mensal s/ IVA = (compra s/ IVA − venda s/ IVA) ÷ meses em frota.',
-      optional: ['VIN', 'Ownership', 'CarGroup', 'Fuel', 'Fatura', 'AnoVenda', 'CompraSemIVA', 'VendaSemIVA', 'DataEntrada', 'DataSaida'],
-      headf: { Make: 'cat', Model: 'cat', Cliente: 'cat', DataVenda: 'range', VendaComIVA: 'range', MesesFrota: 'range', HoldingCost: 'range' },
-      breaks: [['AnoVenda', 'Por ano de venda'], ['Make', 'Por marca'], ['Cliente', 'Por cliente'], ['Ownership', 'Por contrato']],
-      breakNote: 'Viaturas e valor de venda c/ IVA. Clique para filtrar.',
-      searchKeys: ['Plate', 'VIN', 'Model', 'Cliente', 'Fatura'], searchPh: 'Procurar Plate, Vin, Model, cliente ou fatura…',
+      title: 'SALES · valores s/ IVA',
+      sub: 'Viaturas vendidas (ficheiros de vendas 2024, 2025 e 2026). TODOS OS VALORES SÃO SEM IVA: parte das viaturas foi vendida para fora de Portugal, por isso compra, venda e holding cost são apresentados s/ IVA para serem comparáveis. Compra = Purchase price e venda = Salesprice net as in invoice, dos ficheiros de vendas. Só viaturas com registo no WheelSys. Depreciação total s/ IVA = DEPRECIATION TOTAL do ficheiro OpMargin (2024 + 2025 + 2026; para viaturas já fora da folha OP MARGIN, soma da Depreciation das folhas Fleet PnL Report 2024, 2025 e 2026). Compra vs ficheiro master compara o Purchase price dos ficheiros de vendas com o do ficheiro OpMargin (folhas Vehicles / Vehicles_ALL). Idade em frota = meses entre a entrada e a saída de frota no WheelSys; holding cost mensal = (compra − venda) ÷ meses em frota.',
+      optional: ['VIN', 'Ownership', 'CarGroup', 'Fuel', 'Fatura', 'AnoVenda', 'DataEntrada', 'DataSaida', 'DepFonte'],
+      headf: { Make: 'cat', Model: 'cat', Cliente: 'cat', DataVenda: 'range', VendaSemIVA: 'range', DepAcumulada: 'range', CompraCheck: 'cat', MesesFrota: 'range', HoldingCost: 'range' },
+      breaks: [['AnoVenda', 'Por ano de venda'], ['Make', 'Por marca'], ['Fuel', 'Por combustível'], ['Ownership', 'Por contrato'], ['CompraCheck', 'Compra s/ IVA: vendas vs ficheiro master']],
+      breakNote: 'Viaturas e valor de venda s/ IVA. Clique para filtrar.',
+      searchKeys: ['Plate', 'VIN', 'Model', 'Cliente', 'Fatura'], searchPh: 'Procurar Plate, Vin, Model, comprador ou fatura…',
       sortK: 'DataVenda', sortD: -1,
+      extra: salesExtra,
+      onRender: (rows) => drawSalesCharts(rows),
       kpis: [
         { id: 'n', l: 'Viaturas vendidas', v: (rows, tot, f) => [f.nf.format(rows.length), rows.length === tot ? 'todas as vendas' : `de ${f.nf.format(tot)} vendidas`] },
-        { id: 'venda', l: 'Valor de venda c/ IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'VendaComIVA')), f.eur(vsum(rows, 'VendaComIVA'))] },
-        { id: 'compra', l: 'Valor de compra c/ IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'CompraComIVA')), f.eur(vsum(rows, 'CompraComIVA'))] },
-        { id: 'meses', l: 'Tempo médio em frota', v: (rows, tot, f) => { const m = mean(rows, 'MesesFrota'); const n = rows.filter((r) => r.MesesFrota != null).length; return [m == null ? '—' : `${f.nf1.format(m)} meses`, `${f.nf.format(n)} viaturas com registo na frota`]; } },
+        { id: 'venda', l: 'Valor de venda s/ IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'VendaSemIVA')), f.eur(vsum(rows, 'VendaSemIVA'))] },
+        { id: 'compra', l: 'Valor de compra s/ IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'CompraSemIVA')), f.eur(vsum(rows, 'CompraSemIVA'))] },
+        { id: 'dep', l: 'Depreciação total s/ IVA', v: (rows, tot, f) => [f.eurC(vsum(rows, 'DepAcumulada')), f.eur(vsum(rows, 'DepAcumulada'))] },
+        { id: 'chk', l: 'Compra s/ IVA diferente do master', v: (rows, tot, f) => { const d = rows.filter((r) => r.CompraCheck === 'Diferente').length; const ok = rows.filter((r) => r.CompraCheck === 'Igual').length; return [f.nf.format(d), `${f.nf.format(ok)} iguais · ${f.nf.format(rows.length - d - ok)} sem valor no master`]; } },
+        { id: 'meses', l: 'Idade média em frota', v: (rows, tot, f) => { const m = mean(rows, 'MesesFrota'); const n = rows.filter((r) => r.MesesFrota != null).length; return [m == null ? '—' : `${f.nf1.format(m)} meses`, `${f.nf.format(n)} viaturas com registo na frota`]; } },
         { id: 'hc', l: 'Holding cost mensal médio s/ IVA', v: (rows, tot, f) => { const m = mean(rows, 'HoldingCost'); return [m == null ? '—' : f.eur(m).replace(/,\d\d(?=\s?€)/, ''), 'por viatura e mês em frota']; } },
       ],
     });
+
+    // SALES charts: best buyers, vehicle typology, season of the year, fleet age — all s/ IVA
+    function drawSalesCharts(rows) {
+      const nfI = new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 0 });
+      const nf1 = new Intl.NumberFormat('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      const eC = (v) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', notation: 'compact', maximumFractionDigits: 2 }).format(v);
+      const e0 = (v) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v);
+      const mk = (tag, cls, txt) => { const x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; };
+      const card = (id, title, note) => { const c = mk('section', 'fx-card sales-card'); c.id = id; c.dataset.source = 'vendidas'; c.append(mk('h2', null, title), mk('p', 'fx-note', note)); const body = mk('div', 'sales-body'); c.append(body); return [c, body]; };
+      const hbarList = (body, items, color, fmtR) => {
+        const max = Math.max(1, ...items.map((d) => d.v));
+        body.replaceChildren(...items.map((d) => {
+          const row = mk('div', 'sales-bar'); row.title = d.tip || '';
+          const lab = mk('span', 't', d.k);
+          const bar = mk('span', 'b'); const fill = mk('i'); fill.style.width = `${(d.v / max) * 100}%`; fill.style.background = color; bar.append(fill);
+          row.append(lab, bar, mk('span', 'v', fmtR(d))); return row;
+        }));
+        if (!items.length) body.append(mk('p', 'fx-note', 'Sem vendas com estes filtros.'));
+      };
+      const group = (key) => { const m = new Map(); rows.forEach((r) => { const k = (r[key] == null || r[key] === '') ? 'Sem registo' : String(r[key]); const o = m.get(k) || { n: 0, v: 0, age: 0, na: 0 }; o.n++; o.v += Number(r.VendaSemIVA) || 0; if (r.MesesFrota != null) { o.age += Number(r.MesesFrota); o.na++; } m.set(k, o); }); return [...m].map(([k, o]) => ({ k, ...o })); };
+      salesExtra.replaceChildren();
+      const sec = mk('div', 'sales-grid');
+      // 1. Best buyers
+      const [c1, b1] = card('sales-compradores', 'Melhores compradores', 'Top 10 por valor de venda s/ IVA (viaturas · valor).');
+      hbarList(b1, group('Cliente').sort((a, b) => b.v - a.v).slice(0, 10).map((d) => ({ ...d, tip: `${d.k}: ${nfI.format(d.n)} viaturas · ${e0(d.v)} s/ IVA` })), '#00f2d7', (d) => `${nfI.format(d.n)} · ${eC(d.v)}`);
+      // 2. Typology
+      const [c2, b2] = card('sales-tipologia', 'Tipologia de viaturas', 'Por car group (WheelSys): viaturas e valor de venda s/ IVA; top 12.');
+      hbarList(b2, group('CarGroup').sort((a, b) => b.n - a.n).slice(0, 12).map((d) => ({ ...d, val: d.v, v: d.n, tip: `${d.k}: ${nfI.format(d.n)} viaturas · ${e0(d.v)} s/ IVA` })), '#3987e5', (d) => `${nfI.format(d.n)} · ${eC(d.val)}`);
+      // 3. Season of the year (month of sale, stacked by year)
+      const [c3, b3] = card('sales-epoca', 'Época do ano', 'Viaturas vendidas por mês do ano, por ano de venda.');
+      const MES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const years = [...new Set(rows.map((r) => String(r.DataVenda || '').slice(0, 4)).filter(Boolean))].sort();
+      const YC = ['#5b7891', '#3987e5', '#00f2d7', '#e0a537', '#d9614f'];
+      const ycol = (y) => YC[(years.length - 1 - years.indexOf(y)) >= 0 ? Math.max(0, YC.length - 1 - (years.length - 1 - years.indexOf(y)) - 2) : 0];
+      const colOfY = {}; years.forEach((y, i) => { colOfY[y] = ['#5b7891', '#3987e5', '#00f2d7', '#e0a537'][Math.max(0, 4 - years.length + i)] || '#00f2d7'; });
+      const cnt = MES.map((m, i) => { const o = { m, tot: 0, v: 0 }; years.forEach((y) => { o[y] = 0; }); return o; });
+      rows.forEach((r) => { const d = String(r.DataVenda || ''); if (d.length < 7) return; const i = Number(d.slice(5, 7)) - 1; const y = d.slice(0, 4); if (i < 0 || i > 11) return; cnt[i][y]++; cnt[i].tot++; cnt[i].v += Number(r.VendaSemIVA) || 0; });
+      const leg = mk('div', 'fx-legend'); years.forEach((y) => { const s = mk('span'); const i = mk('i'); i.style.background = colOfY[y]; s.append(i, y); leg.append(s); }); b3.append(leg);
+      const W = Math.max(280, (salesExtra.clientWidth || 900) / (salesExtra.clientWidth > 900 ? 2 : 1) - 60), H = 200, ml = 30, mb = 22, mt = 8;
+      const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+      const x = d3.scaleBand(MES, [ml, W - 6]).padding(0.22);
+      const ymax = Math.max(1, d3.max(cnt, (d) => d.tot));
+      const y = d3.scaleLinear([0, ymax], [H - mb, mt]).nice();
+      y.ticks(4).forEach((tk) => { svg.append('line').attr('x1', ml).attr('x2', W - 6).attr('y1', y(tk)).attr('y2', y(tk)).attr('stroke', 'var(--cds-chart-grid)'); svg.append('text').attr('x', ml - 6).attr('y', y(tk)).attr('dy', '0.32em').attr('text-anchor', 'end').attr('class', 'ax').text(nfI.format(tk)); });
+      const tip = mk('div', 'fx-tip'); tip.hidden = true; b3.style.position = 'relative';
+      cnt.forEach((d) => {
+        let acc = 0;
+        years.forEach((yy) => { if (!d[yy]) return; svg.append('rect').attr('x', x(d.m)).attr('width', x.bandwidth()).attr('y', y(acc + d[yy])).attr('height', y(acc) - y(acc + d[yy])).attr('fill', colOfY[yy]); acc += d[yy]; });
+        svg.append('text').attr('x', x(d.m) + x.bandwidth() / 2).attr('y', H - 6).attr('text-anchor', 'middle').attr('class', 'ax').text(d.m);
+        if (d.tot) svg.append('text').attr('x', x(d.m) + x.bandwidth() / 2).attr('y', y(d.tot) - 3).attr('text-anchor', 'middle').attr('class', 'ax strong').text(nfI.format(d.tot));
+        svg.append('rect').attr('x', x(d.m)).attr('width', x.bandwidth()).attr('y', mt).attr('height', H - mb - mt).attr('fill', 'transparent')
+          .on('mousemove', (ev) => { tip.replaceChildren(mk('div', 'h', d.m), ...years.filter((yy) => d[yy]).map((yy) => mk('div', null, `${yy}: ${nfI.format(d[yy])} viaturas`)), mk('div', null, `Total: ${nfI.format(d.tot)} · ${e0(d.v)} s/ IVA`)); tip.hidden = false; const r = b3.getBoundingClientRect(); tip.style.left = `${Math.min(ev.clientX - r.left + 10, r.width - 180)}px`; tip.style.top = `${ev.clientY - r.top + 10}px`; })
+          .on('mouseleave', () => { tip.hidden = true; });
+      });
+      b3.append(svg.node(), tip);
+      // 4. Fleet age
+      const ages = rows.map((r) => r.MesesFrota).filter((v) => v != null && v !== '').map(Number);
+      const avg = ages.length ? ages.reduce((a, b) => a + b, 0) / ages.length : null;
+      const [c4, b4] = card('sales-idade', 'Idade média da frota vendida', avg == null ? 'Sem registo de entrada/saída de frota para estas viaturas.' : `Média de ${nf1.format(avg)} meses em frota (${nfI.format(ages.length)} viaturas com registo). Distribuição por meses em frota.`);
+      const BK = [[0, 3, '0–3 meses'], [3, 6, '3–6 meses'], [6, 9, '6–9 meses'], [9, 12, '9–12 meses'], [12, 18, '12–18 meses'], [18, 24, '18–24 meses'], [24, 1e9, 'Mais de 24 meses']];
+      const byYear = years.map((yy) => { const a = rows.filter((r) => String(r.DataVenda || '').startsWith(yy) && r.MesesFrota != null).map((r) => Number(r.MesesFrota)); return a.length ? `${yy}: ${nf1.format(a.reduce((p, q) => p + q, 0) / a.length)} meses` : null; }).filter(Boolean);
+      hbarList(b4, BK.map(([lo, hi, k]) => { const sel = rows.filter((r) => r.MesesFrota != null && Number(r.MesesFrota) >= lo && Number(r.MesesFrota) < hi); return { k, n: sel.length, v: sel.length, val: sel.reduce((a, r) => a + (Number(r.VendaSemIVA) || 0), 0), tip: `${k}: ${nfI.format(sel.length)} viaturas · ${e0(sel.reduce((a, r) => a + (Number(r.VendaSemIVA) || 0), 0))} s/ IVA` }; }), '#e0a537', (d) => `${nfI.format(d.n)} · ${eC(d.val)}`);
+      if (byYear.length) b4.append(mk('p', 'fx-note', `Idade média por ano de venda: ${byYear.join(' · ')}.`));
+      sec.append(c1, c2, c3, c4);
+      salesExtra.append(sec);
+    }
     let vendData = null;
     seg.hidden = true;
     document.querySelectorAll('.fx-tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab, true)));
