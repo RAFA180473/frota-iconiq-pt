@@ -1554,6 +1554,7 @@
       { k: 'DataEntrada', l: 'Entrada em frota', t: 'date' },
       { k: 'DataSaida', l: 'Saída de frota', t: 'date' },
       { k: 'DepFonte', l: 'Origem da depreciação', t: 'cat' },
+      { k: 'CreditReceived', l: 'Credit received SEM IVA', t: 'range', num: true, eur: true, foot: 'sum' },
     ];
 
     const mean = (rows, k) => { const v = rows.map((r) => r[k]).filter((x) => x != null && x !== '').map(Number); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
@@ -1563,8 +1564,8 @@
       cols: VCOLS, valueKey: 'VendaSemIVA', idp: 'vend', markSource: 'vendidas', block: false, csv: true, csvName: 'sales_sem_iva.csv',
       colors: ['#00f2d7', '#3987e5', '#e0a537', '#d9614f'],
       title: 'SALES · valores SEM IVA',
-      sub: 'Viaturas vendidas (ficheiros de vendas 2024, 2025 e 2026). TODOS OS VALORES SÃO SEM IVA: parte das viaturas foi vendida para fora de Portugal, por isso compra, venda e holding cost são apresentados SEM IVA para serem comparáveis. Compra = Purchase price e venda = Salesprice net as in invoice, dos ficheiros de vendas. Só viaturas com registo no WheelSys. Depreciação total SEM IVA = DEPRECIATION TOTAL do ficheiro OpMargin (2024 + 2025 + 2026; para viaturas já fora da folha OP MARGIN, soma da Depreciation das folhas Fleet PnL Report 2024, 2025 e 2026). Idade em frota = meses entre a entrada e a saída de frota no WheelSys; diferença compra − venda = compra SEM IVA − venda SEM IVA; custo real = depreciação total + diferença compra − venda; holding cost mensal = custo real (holding cost total) ÷ meses em frota.',
-      optional: ['VIN', 'Ownership', 'CarGroup', 'Fuel', 'Fatura', 'AnoVenda', 'DataEntrada', 'DataSaida', 'DepFonte'],
+      sub: 'Viaturas vendidas (ficheiros de vendas 2024, 2025 e 2026). TODOS OS VALORES SÃO SEM IVA: parte das viaturas foi vendida para fora de Portugal, por isso compra, venda e holding cost são apresentados SEM IVA para serem comparáveis. Compra = Purchase price e venda = Salesprice net as in invoice, dos ficheiros de vendas. Só viaturas com registo no WheelSys. Depreciação total SEM IVA = DEPRECIATION TOTAL do ficheiro OpMargin (2024 + 2025 + 2026; para viaturas já fora da folha OP MARGIN, soma da Depreciation das folhas Fleet PnL Report 2024, 2025 e 2026); quando esse valor é superior ao valor de venda, usa-se o Credit received do ficheiro de vendas. Idade em frota = meses entre a entrada e a saída de frota no WheelSys; diferença compra − venda = compra SEM IVA − venda SEM IVA; custo real = depreciação total + diferença compra − venda; holding cost mensal = custo real (holding cost total) ÷ meses em frota.',
+      optional: ['VIN', 'Ownership', 'CarGroup', 'Fuel', 'Fatura', 'AnoVenda', 'DataEntrada', 'DataSaida', 'DepFonte', 'CreditReceived'],
       headf: { Make: 'cat', Model: 'cat', Cliente: 'cat', DataVenda: 'range', VendaSemIVA: 'range', DepAcumulada: 'range', CustoReal: 'range', MesesFrota: 'range', HoldingCost: 'range' },
       breaks: [['AnoVenda', 'Por ano de venda'], ['Make', 'Por marca'], ['Fuel', 'Por combustível'], ['Ownership', 'Por contrato']],
       breakNote: 'Viaturas e valor de venda SEM IVA. Clique para filtrar.',
