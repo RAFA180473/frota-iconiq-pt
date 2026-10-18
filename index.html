@@ -371,6 +371,12 @@
     .fx-dbar i { display: inline-block; height: 8px; border-radius: 4px; min-width: 2px; }
     .fx-late-t { color: var(--color-bad); font-weight: var(--cds-font-weight-medium); }
     .fx-obs { max-width: 22rem; white-space: normal !important; color: var(--color-fg-muted); }
+    .fx-ctl { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--cds-font-size-caption); white-space: nowrap; border: 1px solid var(--color-border-line); }
+    .fx-ctl.bad { color: var(--color-bad); border-color: currentColor; }
+    .fx-ctl.warn { color: var(--color-warn); border-color: currentColor; }
+    .fx-ctl.ok { color: var(--color-ok); border-color: currentColor; }
+    .fx-miss { color: var(--color-fg-muted); font-style: italic; }
+    .fx-sub-h { margin: var(--cds-gap-lg, 24px) 0 var(--cds-gap-sm, 8px); }
   </style>
 
   <div class="fx-page" id="frota-ativa" hidden>
@@ -382,7 +388,8 @@
       <div class="fx-kpi"><span class="lbl">Taxa de ocupação</span><span class="val dash-skeleton" data-k="ocupacao">—</span><span class="sub">alugadas ÷ ativas</span></div>
       <div class="fx-kpi"><span class="lbl">Alugadas</span><span class="val dash-skeleton" data-k="alugadas">—</span><span class="sub">Rented</span></div>
       <div class="fx-kpi"><span class="lbl">Disponíveis</span><span class="val dash-skeleton" data-k="disponiveis">—</span><span class="sub">Available</span></div>
-      <div class="fx-kpi"><span class="lbl">Em NRT</span><span class="val dash-skeleton" data-k="nonrev">—</span><span class="sub">Non Revenue</span></div>
+      <div class="fx-kpi"><span class="lbl">Em NRT</span><span class="val dash-skeleton" data-k="nonrev">—</span><span class="sub dash-skeleton" data-k="nonrevSplit">—</span></div>
+      <div class="fx-kpi"><span class="lbl">Taxa de imobilização</span><span class="val dash-skeleton" data-k="imob">—</span><span class="sub">NRT ÷ ativas, inclui estáticas</span></div>
       <div class="fx-kpi"><span class="lbl">Valor frota c/ IVA</span><span class="val dash-skeleton" data-k="valor">—</span><span class="sub dash-skeleton" data-k="kmMedio">—</span></div>
     </section>
     <p class="fx-hint">Clique numa barra, numa cor ou numa linha para filtrar todo o separador; volte a clicar para retirar.</p>
@@ -396,7 +403,7 @@
       </section>
       <section class="fx-card" id="non-revenue">
         <h2>NRT por motivo</h2>
-        <p class="fx-note">Viaturas em Non Revenue e média de dias imobilizadas.</p>
+        <p class="fx-note">Todas as viaturas em Non Revenue, incluindo as imobilizações estáticas de uso interno, e média de dias imobilizadas.</p>
         <div class="fx-chart" id="ch-nr" data-source="frota"></div>
       </section>
     </div>
@@ -474,33 +481,48 @@
     <p class="fx-take dash-skeleton" id="nrt-take" data-source="frota">—</p>
 
     <section class="fx-kpis" id="nrt-kpis" aria-label="Indicadores NRT" data-source="frota">
-      <div class="fx-kpi"><span class="lbl">Viaturas em NRT</span><span class="val dash-skeleton" data-k="n">—</span><span class="sub dash-skeleton" data-k="pct">—</span></div>
+      <div class="fx-kpi"><span class="lbl">NRT em acompanhamento</span><span class="val dash-skeleton" data-k="n">—</span><span class="sub dash-skeleton" data-k="pct">—</span></div>
       <div class="fx-kpi"><span class="lbl">Média de dias imobilizada</span><span class="val dash-skeleton" data-k="media">—</span><span class="sub dash-skeleton" data-k="mediana">—</span></div>
+      <div class="fx-kpi"><span class="lbl">Prazo ultrapassado</span><span class="val dash-skeleton" data-k="late">—</span><span class="sub dash-skeleton" data-k="lateSub">—</span></div>
       <div class="fx-kpi"><span class="lbl">Mais de 30 dias</span><span class="val dash-skeleton" data-k="m30">—</span><span class="sub">imobilizadas há mais de um mês</span></div>
-      <div class="fx-kpi"><span class="lbl">Fim previsto ultrapassado</span><span class="val dash-skeleton" data-k="late">—</span><span class="sub">data de fim do NRT já passou</span></div>
-      <div class="fx-kpi"><span class="lbl">Dias acumulados</span><span class="val dash-skeleton" data-k="soma">—</span><span class="sub">soma dos dias parados</span></div>
-      <div class="fx-kpi"><span class="lbl">Valor imobilizado c/ IVA</span><span class="val dash-skeleton" data-k="valor">—</span><span class="sub">valor de venda das viaturas em NRT</span></div>
+      <div class="fx-kpi"><span class="lbl">Sem atualização +7 dias</span><span class="val dash-skeleton" data-k="stale">—</span><span class="sub">processo sem alterações no WheelSys</span></div>
+      <div class="fx-kpi"><span class="lbl">Sem observações</span><span class="val dash-skeleton" data-k="semObs">—</span><span class="sub">campo Remarks do NRT vazio</span></div>
+      <div class="fx-kpi"><span class="lbl">Sem fornecedor</span><span class="val dash-skeleton" data-k="semForn">—</span><span class="sub">Maintenance Supplier vazio</span></div>
+      <div class="fx-kpi"><span class="lbl">Valor imobilizado c/ IVA</span><span class="val dash-skeleton" data-k="valor">—</span><span class="sub">valor de venda das viaturas em acompanhamento</span></div>
     </section>
-    <p class="fx-hint">Dias contados desde o início do NRT no WheelSys até à última atualização (todos os dias às 11h). Clique nos gráficos para filtrar o quadro.</p>
+    <p class="fx-hint">Análise só dos NRT de Manutenção, Colisão, Avaria/Garantia, Venda/Devolução, Quebra de vidros e pneus, Assistência em viagem e Peritagem. Os restantes são imobilizações estáticas de uso interno: contam na taxa de imobilização e de ocupação, mas ficam no quadro próprio no fim da página. Dados do WheelSys (Vehicle List e Non Revenue Tickets), atualizados todos os dias às 11h; os dias sem atualização contam a partir de 18/10/2026.</p>
 
     <div class="fx-grid">
+      <section class="fx-card" id="nrt-controlo">
+        <h2>Controlo do acompanhamento</h2>
+        <p class="fx-note">Estado de cada processo: prazo, observações e atualização. Clique para filtrar.</p>
+        <div class="fx-chart" id="ch-nrt-ctl" data-source="frota"></div>
+      </section>
       <section class="fx-card" id="nrt-dias">
         <h2>Dias de imobilização</h2>
-        <p class="fx-note">Viaturas em NRT por escalão de dias parada.</p>
+        <p class="fx-note">Viaturas em acompanhamento por escalão de dias parada.</p>
         <div class="fx-chart" id="ch-nrt-faixa" data-source="frota"></div>
       </section>
+    </div>
+
+    <div class="fx-grid">
       <section class="fx-card" id="nrt-motivo">
         <h2>Por motivo</h2>
         <p class="fx-note">Número de viaturas e média de dias imobilizadas.</p>
         <div class="fx-chart" id="ch-nrt-motivo" data-source="frota"></div>
       </section>
-    </div>
-
-    <div class="fx-grid">
       <section class="fx-card" id="nrt-aeroporto">
         <h2>Por aeroporto</h2>
         <p class="fx-note">Clique para escolher o aeroporto.</p>
         <div class="fx-chart" id="ch-nrt-loc" data-source="frota"></div>
+      </section>
+    </div>
+
+    <div class="fx-grid">
+      <section class="fx-card" id="nrt-fornecedor">
+        <h2>Por fornecedor</h2>
+        <p class="fx-note">Fornecedor indicado no NRT do WheelSys e média de dias imobilizadas.</p>
+        <div class="fx-chart" id="ch-nrt-forn" data-source="frota"></div>
       </section>
       <section class="fx-card" id="nrt-marca">
         <h2>Por marca</h2>
@@ -510,10 +532,10 @@
     </div>
 
     <section class="fx-card" id="quadro-nrt">
-      <h2>Quadro NRT</h2>
-      <p class="fx-note">Viaturas em Non Revenue com os dados da viatura, o contrato NRT do WheelSys e os dias de imobilização. Ordenado pelos dias parada.</p>
+      <h2>Quadro NRT em acompanhamento</h2>
+      <p class="fx-note">Um processo por viatura, com o NRT do WheelSys, prazos, observações e fornecedor. Ordenado pelos dias parada; a barra vermelha marca prazo ultrapassado.</p>
       <div class="fx-tools">
-        <input id="nq" type="search" placeholder="Procurar matrícula, modelo, Nº NRT…" aria-label="Procurar no quadro NRT">
+        <input id="nq" type="search" placeholder="Procurar matrícula, modelo, Nº NRT, observações, fornecedor…" aria-label="Procurar no quadro NRT">
         <button type="button" class="fts-btn" id="nrt-csv">Exportar CSV</button>
         <span class="fx-count" id="ncnt"></span>
       </div>
@@ -523,16 +545,50 @@
             <th data-field="Plate"><button type="button">Matrícula</button></th>
             <th data-field="Make"><button type="button">Marca</button></th>
             <th data-field="Model"><button type="button">Modelo</button></th>
-            <th data-field="CarGroup"><button type="button">Grupo</button></th>
-            <th data-field="Ownership"><button type="button">Contrato</button></th>
-            <th class="num" data-field="Mileage"><button type="button">Km</button></th>
             <th data-field="Localizacao"><button type="button">Localização</button></th>
-            <th data-field="MotivoNR"><button type="button">Motivo</button></th>
+            <th data-field="MotivoGrupo"><button type="button">Motivo</button></th>
             <th data-field="NRTNo"><button type="button">Nº NRT</button></th>
             <th data-field="NRTInicio"><button type="button">Início</button></th>
             <th data-field="NRTFimPrevisto"><button type="button">Fim previsto</button></th>
             <th class="num" data-field="DiasImobilizacao"><button type="button">Dias imobilizada</button></th>
             <th class="num" data-field="DiasPrevistos"><button type="button">Dias previstos</button></th>
+            <th class="num" data-field="DiasAtraso"><button type="button">Dias de atraso</button></th>
+            <th class="num" data-field="DiasSemAtualizacao"><button type="button">Sem atualização (dias)</button></th>
+            <th data-field="NRTControlo"><button type="button">Controlo</button></th>
+            <th data-field="NRTFornecedor"><button type="button">Fornecedor</button></th>
+            <th data-field="NRTObs"><button type="button">Observações</button></th>
+            <th data-field="NRTNotaViatura"><button type="button">Nota da viatura</button></th>
+            <th data-field="Ownership"><button type="button">Contrato</button></th>
+            <th class="num" data-field="Mileage"><button type="button">Km</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <h2 class="fx-sub-h" id="nrt-estaticas-h">Imobilizações estáticas · uso interno</h2>
+    <section class="fx-kpis" id="nrt-est-kpis" aria-label="Indicadores das imobilizações estáticas" data-source="frota">
+      <div class="fx-kpi"><span class="lbl">Viaturas estáticas</span><span class="val dash-skeleton" data-k="n">—</span><span class="sub dash-skeleton" data-k="pct">—</span></div>
+      <div class="fx-kpi"><span class="lbl">Taxa de imobilização total</span><span class="val dash-skeleton" data-k="imob">—</span><span class="sub">todos os NRT ÷ frota ativa</span></div>
+      <div class="fx-kpi"><span class="lbl">Taxa de ocupação</span><span class="val dash-skeleton" data-k="ocup">—</span><span class="sub">alugadas ÷ frota ativa</span></div>
+      <div class="fx-kpi"><span class="lbl">Média de dias</span><span class="val dash-skeleton" data-k="media">—</span><span class="sub">desde o início do NRT</span></div>
+    </section>
+    <section class="fx-card" id="quadro-estaticas">
+      <h2>Quadro de imobilizações estáticas</h2>
+      <p class="fx-note">Viaturas em NRT de uso interno (Empregado, Administração, AVEX, Station Movement, Shuttle, Consignação/outros…). Não entram na análise acima.</p>
+      <div class="fx-tools"><span class="fx-count" id="ecnt"></span></div>
+      <div class="fx-scroll">
+        <table class="fx-table" id="tb-est" data-source="frota" data-row-key="Plate">
+          <thead><tr>
+            <th data-field="Plate"><button type="button">Matrícula</button></th>
+            <th data-field="Make"><button type="button">Marca</button></th>
+            <th data-field="Model"><button type="button">Modelo</button></th>
+            <th data-field="Localizacao"><button type="button">Localização</button></th>
+            <th data-field="MotivoNR"><button type="button">Motivo</button></th>
+            <th data-field="NRTNo"><button type="button">Nº NRT</button></th>
+            <th data-field="NRTInicio"><button type="button">Início</button></th>
+            <th data-field="NRTFimPrevisto"><button type="button">Fim previsto</button></th>
+            <th class="num" data-field="DiasImobilizacao"><button type="button">Dias</button></th>
             <th data-field="NRTObs"><button type="button">Observações</button></th>
           </tr></thead>
           <tbody></tbody>
@@ -1156,10 +1212,15 @@
       if (r.Mileage == null || r.Mileage === '' || isNaN(k)) return 'Sem km';
       return kmLabel(KMB.find(([a, b]) => k >= a && k < b) || KMB[KMB.length - 1]);
     };
+    const CTL_ORDER = ['Prazo ultrapassado', 'Sem observações', 'Sem atualização há mais de 7 dias', 'Dentro do prazo'];
+    const CTL_CLS = { 'Prazo ultrapassado': 'bad', 'Sem observações': 'warn', 'Sem atualização há mais de 7 dias': 'warn', 'Dentro do prazo': 'ok' };
     const DIMS = {
       Estado: { l: 'Situação', get: (r) => r.Estado, order: ESTADOS },
       MotivoNR: { l: 'Motivo NRT', get: (r) => r.Estado === 'Non Revenue' ? (r.MotivoNR || 'Sem motivo') : null },
       Faixa: { l: 'Dias imobilizada', get: faixaDias, order: [...DAYB.map((b) => b[0]), 'Sem data'] },
+      Motivo: { l: 'Motivo', get: (r) => r.MotivoGrupo || r.MotivoNR || 'Sem motivo' },
+      Controlo: { l: 'Controlo', get: (r) => r.NRTControlo || 'Sem informação', order: CTL_ORDER },
+      Fornecedor: { l: 'Fornecedor', get: (r) => r.NRTFornecedor || 'Sem fornecedor' },
       Make: { l: 'Marca', get: (r) => r.Make || 'Sem marca' },
       CarGroup: { l: 'Grupo', get: (r) => r.CarGroup || 'Sem grupo' },
       Ownership: { l: 'Contrato', get: (r) => r.Ownership || 'Sem informação' },
@@ -1334,6 +1395,8 @@
       setKpis(document.getElementById('kpis'), {
         total: fInt(o.n), ocupacao: o.n ? fPct(o.alugadas / o.n) : null, alugadas: fInt(o.alugadas), disponiveis: fInt(o.disponiveis),
         nonrev: fInt(o.nonrev), valor: fEur(o.valor), kmMedio: km.length ? `${fKm(d3.mean(km))} km médios` : null,
+        imob: o.n ? fPct(o.nonrev / o.n) : null,
+        nonrevSplit: (() => { const nr = rows.filter((r) => r.Estado === 'Non Revenue'); const ac = nr.filter((r) => r.NRTTipo === 'Acompanhamento').length; return `${fInt(ac)} em acompanhamento · ${fInt(nr.length - ac)} estáticas`; })(),
       }, 'ok');
       take.classList.remove('dash-skeleton');
       take.textContent = o.n
@@ -1412,13 +1475,19 @@
     }
 
     // ---------- NRT ----------
-    const NF = makeFilter(document.getElementById('nrt-filtros'), ['MotivoNR', 'Faixa', 'Make', 'CarGroup', 'Ownership', 'Fuel'], () => redraw());
+    const NF = makeFilter(document.getElementById('nrt-filtros'), ['Controlo', 'Motivo', 'Faixa', 'Fornecedor', 'Make', 'CarGroup', 'Ownership'], () => redraw());
     const FAIXA_C = ['#7fd8c9', '#3987e5', '#e0a537', '#d9614f', '#a8324a', 'var(--cds-chart-muted)'];
+    const CTL_C = { 'Prazo ultrapassado': 'var(--color-bad)', 'Sem observações': 'var(--color-warn)', 'Sem atualização há mais de 7 dias': '#e0a537', 'Dentro do prazo': 'var(--color-ok)' };
     const nt = document.getElementById('tb-nrt');
-    const nSort = { key: 'DiasImobilizacao', dir: -1, nums: ['Mileage', 'DiasImobilizacao', 'DiasPrevistos'] };
+    const et = document.getElementById('tb-est');
+    const nSort = { key: 'DiasImobilizacao', dir: -1, nums: ['Mileage', 'DiasImobilizacao', 'DiasPrevistos', 'DiasAtraso', 'DiasSemAtualizacao'] };
+    const eSort = { key: 'DiasImobilizacao', dir: -1, nums: ['DiasImobilizacao'] };
+    const isLateR = (r) => r.NRTAtrasada === true || r.NRTAtrasada === 'true';
+    const nInt = (v) => v == null || v === '' ? '' : fInt(Number(v));
     let nRowsShown = [];
     document.getElementById('nq').addEventListener('input', () => drawNrt());
     sortable(nt, nSort, () => drawNrt());
+    sortable(et, eSort, () => drawNrt());
     const diasCor = (d) => FAIXA_C[Math.max(0, DIMS.Faixa.order.indexOf(faixaDias({ DiasImobilizacao: d })))];
     const diasTip = (d) => [[null, `${fInt(d.n)} viaturas`], [null, `Média: ${diasTxt(avgD(d))} imobilizada`], [null, `Máximo: ${diasTxt(d.maxd)}`], [null, `Valor c/ IVA: ${fEurFull(d.valor)}`]];
     document.getElementById('nrt-csv').addEventListener('click', () => {
@@ -1427,96 +1496,150 @@
       const val = (r, k) => ['NRTInicio', 'NRTFimPrevisto'].includes(k) ? `${dFmt(r[k])} ${String(r[k] || '').slice(11, 16)}`.trim() : r[k];
       const lines = [cols.map((c) => c[1]).join(';'), ...nRowsShown.map((r) => cols.map(([k]) => esc(val(r, k))).join(';'))];
       const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quadro_nrt.csv'; document.body.append(a); a.click(); a.remove();
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quadro_nrt_acompanhamento.csv'; document.body.append(a); a.click(); a.remove();
     });
 
     function drawNrt() {
       const f = dash.data('frota');
       const ok = f.status === 'ok';
       const all = ok ? f.data : [];
-      NF.set(all.filter((r) => r.Estado === 'Non Revenue'));
+      const isNR = (r) => r.Estado === 'Non Revenue';
+      NF.set(all.filter((r) => isNR(r) && r.NRTTipo !== 'Estática'));
       NF.render();
-      const CH = ['ch-nrt-faixa', 'ch-nrt-motivo', 'ch-nrt-loc', 'ch-nrt-make'].map((id) => document.getElementById(id));
+      const CH = ['ch-nrt-ctl', 'ch-nrt-faixa', 'ch-nrt-motivo', 'ch-nrt-loc', 'ch-nrt-forn', 'ch-nrt-make'].map((id) => document.getElementById(id));
       const take = document.getElementById('nrt-take');
       if (!ok) {
         setKpis(document.getElementById('nrt-kpis'), null, f.status);
+        setKpis(document.getElementById('nrt-est-kpis'), null, f.status);
         take.textContent = '—'; take.classList.toggle('dash-skeleton', f.status === 'loading');
         CH.forEach((b) => failOrWait(b, f.status));
-        nt.querySelector('tbody').replaceChildren(); nRowsShown = [];
+        nt.querySelector('tbody').replaceChildren(); et.querySelector('tbody').replaceChildren(); nRowsShown = [];
         document.getElementById('ncnt').textContent = f.status === 'error' ? 'Failed to load' : '';
+        document.getElementById('ecnt').textContent = '';
         return;
       }
       const loc = curLocOrNull();
       const rows = NF.filtered();
-      const frotaLoc = all.filter((r) => !loc || r.Localizacao === loc).length;
+      const ativas = all.filter((r) => !loc || r.Localizacao === loc);
+      const frotaLoc = ativas.length;
       const ds = rows.filter((r) => r.DiasImobilizacao != null && r.DiasImobilizacao !== '').map((r) => Number(r.DiasImobilizacao));
       const m30 = ds.filter((d) => d > 30).length;
-      const late = rows.filter((r) => r.NRTAtrasada === true || r.NRTAtrasada === 'true').length;
+      const lateR = rows.filter(isLateR);
+      const atrasoMed = lateR.length ? d3.mean(lateR, (r) => Number(r.DiasAtraso) || 0) : null;
+      const stale = rows.filter((r) => Number(r.DiasSemAtualizacao) > 7).length;
+      const semObs = rows.filter((r) => !r.NRTObs).length;
+      const semForn = rows.filter((r) => !r.NRTFornecedor).length;
       const valor = d3.sum(rows, (r) => Number(r.ValorComIVA) || 0);
       setKpis(document.getElementById('nrt-kpis'), {
         n: fInt(rows.length), pct: frotaLoc ? `${fPct(rows.length / frotaLoc)} da frota ativa${loc ? ' em ' + loc.replace(' Aeroporto', '') : ''}` : null,
         media: ds.length ? diasTxt(d3.mean(ds)) : null, mediana: ds.length ? `mediana de ${diasTxt(d3.median(ds))}` : null,
-        m30: fInt(m30), late: fInt(late), soma: fInt(d3.sum(ds)), valor: fEur(valor),
+        late: fInt(lateR.length), lateSub: lateR.length ? `atraso médio de ${diasTxt(atrasoMed)}` : 'fim previsto do NRT já passou',
+        m30: fInt(m30), stale: fInt(stale), semObs: fInt(semObs), semForn: fInt(semForn), valor: fEur(valor),
       }, 'ok');
       take.classList.remove('dash-skeleton');
       const oldest = rows.slice().sort((a, b) => (Number(b.DiasImobilizacao) || 0) - (Number(a.DiasImobilizacao) || 0))[0];
+      const parts = [];
+      if (lateR.length) parts.push(`${fInt(lateR.length)} com prazo ultrapassado`);
+      if (semObs) parts.push(`${fInt(semObs)} sem observações`);
+      if (stale) parts.push(`${fInt(stale)} sem atualização há mais de 7 dias`);
+      if (semForn) parts.push(`${semForn === rows.length ? 'nenhum' : fInt(rows.length - semForn)} com fornecedor registado`);
       take.textContent = rows.length
-        ? `${fInt(rows.length)} viaturas em NRT${NF.active() ? ' com os filtros escolhidos' : ''}, imobilizadas em média ${diasTxt(d3.mean(ds))}; ${fInt(m30)} estão paradas há mais de 30 dias${late ? ` e ${fInt(late)} ${late === 1 ? 'já passou' : 'já passaram'} a data de fim prevista` : ''}.${oldest ? ` A mais antiga é a ${oldest.Plate} (${oldest.Make} ${oldest.Model}, ${oldest.MotivoNR || 'sem motivo'}), com ${diasTxt(Number(oldest.DiasImobilizacao))}.` : ''}`
-        : 'Nenhuma viatura em NRT com estes filtros.';
+        ? `${fInt(rows.length)} viaturas em NRT de acompanhamento${NF.active() ? ' com os filtros escolhidos' : ''}, imobilizadas em média ${diasTxt(d3.mean(ds))}${parts.length ? '; ' + parts.join(', ') : ''}.${oldest ? ` A mais antiga é a ${oldest.Plate} (${oldest.Make} ${oldest.Model}, ${oldest.MotivoGrupo || oldest.MotivoNR || 'sem motivo'}), com ${diasTxt(Number(oldest.DiasImobilizacao))}.` : ''}`
+        : 'Nenhuma viatura em NRT de acompanhamento com estes filtros.';
 
+      // Controlo
+      const ct = countBy(NF.filtered('Controlo'), DIMS.Controlo.get).sort((a, b) => CTL_ORDER.indexOf(a.k) - CTL_ORDER.indexOf(b.k));
+      chart(CH[0], ct, {
+        max: d3.max(ct, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: CTL_C[d.k] || 'var(--cds-chart-muted)' }],
+        valText: (d) => `${fInt(d.n)} · Ø ${diasTxt(avgD(d))}`,
+        tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => NF.toggle('Controlo', d.k), isSel: (d) => NF.st.Controlo.has(d.k),
+      });
       // Dias por escalão
       const ford = DIMS.Faixa.order;
       const fa = countBy(NF.filtered('Faixa'), faixaDias).sort((a, b) => ford.indexOf(a.k) - ford.indexOf(b.k));
-      chart(CH[0], fa, {
+      chart(CH[1], fa, {
         max: d3.max(fa, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: FAIXA_C[ford.indexOf(d.k)] }],
         tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => NF.toggle('Faixa', d.k), isSel: (d) => NF.st.Faixa.has(d.k),
       });
-      // Motivo
-      const mo = countBy(NF.filtered('MotivoNR'), (r) => r.MotivoNR || 'Sem motivo').sort((a, b) => b.n - a.n);
-      chart(CH[1], mo, {
+      // Motivo (grupo)
+      const mo = countBy(NF.filtered('Motivo'), DIMS.Motivo.get).sort((a, b) => b.n - a.n);
+      chart(CH[2], mo, {
         max: d3.max(mo, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: diasCor(avgD(d)) }],
         valText: (d) => `${fInt(d.n)} · Ø ${diasTxt(avgD(d))}`,
-        tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => NF.toggle('MotivoNR', d.k), isSel: (d) => NF.st.MotivoNR.has(d.k),
+        tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => NF.toggle('Motivo', d.k), isSel: (d) => NF.st.Motivo.has(d.k),
       });
       // Aeroporto
       const rl = NF.filtered('loc');
       const la = LOCS.map((l) => ({ ...(countBy(rl.filter((r) => r.Localizacao === l), () => l)[0] || { n: 0, nd: 0, dias: 0, maxd: 0, valor: 0 }), k: l }));
-      chart(CH[2], la.some((d) => d.n) ? la : [], {
+      chart(CH[3], la.some((d) => d.n) ? la : [], {
         max: d3.max(la, (d) => d.n), label: (d) => d.k.replace(' Aeroporto', ''), segs: (d) => [{ v: d.n, c: diasCor(avgD(d)) }],
         valText: (d) => d.n ? `${fInt(d.n)} · Ø ${diasTxt(avgD(d))}` : '0',
         tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => dash.setParams({ loc: loc === d.k ? null : d.k }), isSel: (d) => loc === d.k,
       });
+      // Fornecedor
+      const fo = countBy(NF.filtered('Fornecedor'), DIMS.Fornecedor.get).sort((a, b) => b.n - a.n);
+      chart(CH[4], fo, {
+        max: d3.max(fo, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: d.k === 'Sem fornecedor' ? 'var(--cds-chart-muted)' : diasCor(avgD(d)) }],
+        valText: (d) => `${fInt(d.n)} · Ø ${diasTxt(avgD(d))}`,
+        tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => NF.toggle('Fornecedor', d.k), isSel: (d) => NF.st.Fornecedor.has(d.k),
+      });
       // Marca
       const ma = countBy(NF.filtered('Make'), (r) => r.Make || 'Sem marca').sort((a, b) => b.n - a.n);
-      chart(CH[3], ma, {
+      chart(CH[5], ma, {
         max: d3.max(ma, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: diasCor(avgD(d)) }],
         valText: (d) => `${fInt(d.n)} · Ø ${diasTxt(avgD(d))}`,
         tipHead: (d) => d.k, tipLines: diasTip, onClick: (d) => NF.toggle('Make', d.k), isSel: (d) => NF.st.Make.has(d.k),
       });
 
-      // Quadro NRT
+      // Quadro NRT em acompanhamento
       const q = document.getElementById('nq').value.trim().toLowerCase();
-      const tr0 = q ? rows.filter((r) => [r.Plate, r.Make, r.Model, r.CarGroup, r.NRTNo, r.MotivoNR, r.NRTObs, r.Ownership].join(' ').toLowerCase().includes(q)) : rows.slice();
+      const tr0 = q ? rows.filter((r) => [r.Plate, r.Make, r.Model, r.CarGroup, r.NRTNo, r.MotivoNR, r.MotivoGrupo, r.NRTObs, r.NRTFornecedor, r.NRTNotaViatura, r.NRTControlo, r.Ownership].join(' ').toLowerCase().includes(q)) : rows.slice();
       sortRows(tr0, nSort.key, nSort.dir, nSort.nums); markSort(nt, nSort);
       nRowsShown = tr0;
       const dmax = d3.max(tr0, (r) => Number(r.DiasImobilizacao) || 0) || 1;
+      const miss = (v, txt) => v ? tdOf(v, 'fx-obs') : (() => { const td = mk('td', 'fx-obs'); td.appendChild(mk('span', 'fx-miss', txt)); return td; })();
       nt.querySelector('tbody').replaceChildren(...tr0.map((r) => {
-        const isLate = r.NRTAtrasada === true || r.NRTAtrasada === 'true';
-        const tr = mk('tr', isLate ? 'fx-late' : null);
-        [[r.Plate], [r.Make], [r.Model, 'wrap'], [r.CarGroup], [r.Ownership], [r.Mileage == null || r.Mileage === '' ? '' : fKm(r.Mileage), 'num'],
-          [String(r.Localizacao || '').replace(' Aeroporto', '')], [r.MotivoNR], [r.NRTNo], [dFmt(r.NRTInicio)]].forEach(([v, c]) => tr.appendChild(tdOf(v, c)));
+        const late = isLateR(r);
+        const tr = mk('tr', late ? 'fx-late' : null);
+        [[r.Plate], [r.Make], [r.Model, 'wrap'], [String(r.Localizacao || '').replace(' Aeroporto', '')], [r.MotivoGrupo || r.MotivoNR], [r.NRTNo], [dFmt(r.NRTInicio)]].forEach(([v, c]) => tr.appendChild(tdOf(v, c)));
         const tdF = mk('td', null, dFmt(r.NRTFimPrevisto));
-        if (isLate) tdF.appendChild(mk('span', 'fx-late-t', ' · ultrapassado'));
+        if (late) tdF.appendChild(mk('span', 'fx-late-t', ' · ultrapassado'));
         tr.appendChild(tdF);
         const tdD = mk('td', 'num'); const box = mk('span', 'fx-dbar');
         const dd = r.DiasImobilizacao == null || r.DiasImobilizacao === '' ? null : Number(r.DiasImobilizacao);
         if (dd != null) { const i = mk('i'); i.style.width = `${Math.max(2, (dd / dmax) * 70)}px`; i.style.background = diasCor(dd); box.append(i, mk('span', null, fInt(dd))); }
         tdD.appendChild(box); tr.appendChild(tdD);
-        tr.appendChild(tdOf(r.DiasPrevistos == null || r.DiasPrevistos === '' ? '' : fInt(r.DiasPrevistos), 'num'));
-        tr.appendChild(tdOf(r.NRTObs, 'fx-obs'));
+        tr.appendChild(tdOf(nInt(r.DiasPrevistos), 'num'));
+        const tdA = tdOf(Number(r.DiasAtraso) > 0 ? fInt(Number(r.DiasAtraso)) : '', 'num'); if (Number(r.DiasAtraso) > 0) tdA.classList.add('fx-late-t'); tr.appendChild(tdA);
+        tr.appendChild(tdOf(nInt(r.DiasSemAtualizacao), 'num'));
+        const tdC = mk('td'); tdC.appendChild(mk('span', `fx-ctl ${CTL_CLS[r.NRTControlo] || ''}`, r.NRTControlo || '')); tr.appendChild(tdC);
+        tr.appendChild(miss(r.NRTFornecedor, 'sem fornecedor'));
+        tr.appendChild(miss(r.NRTObs, 'sem observações'));
+        tr.appendChild(tdOf(r.NRTNotaViatura, 'fx-obs'));
+        tr.appendChild(tdOf(r.Ownership));
+        tr.appendChild(tdOf(r.Mileage == null || r.Mileage === '' ? '' : fKm(r.Mileage), 'num'));
         return tr;
       }));
-      document.getElementById('ncnt').textContent = `${fInt(tr0.length)} viaturas`;
+      document.getElementById('ncnt').textContent = `${fInt(tr0.length)} processos`;
+
+      // Imobilizações estáticas (uso interno)
+      const est = all.filter((r) => isNR(r) && r.NRTTipo === 'Estática' && (!loc || r.Localizacao === loc));
+      const nrAll = ativas.filter(isNR).length;
+      const alug = ativas.filter((r) => r.Estado === 'Alugada').length;
+      const de = est.filter((r) => r.DiasImobilizacao != null && r.DiasImobilizacao !== '').map((r) => Number(r.DiasImobilizacao));
+      setKpis(document.getElementById('nrt-est-kpis'), {
+        n: fInt(est.length), pct: frotaLoc ? `${fPct(est.length / frotaLoc)} da frota ativa${loc ? ' em ' + loc.replace(' Aeroporto', '') : ''}` : null,
+        imob: frotaLoc ? fPct(nrAll / frotaLoc) : null, ocup: frotaLoc ? fPct(alug / frotaLoc) : null,
+        media: de.length ? diasTxt(d3.mean(de)) : null,
+      }, 'ok');
+      sortRows(est, eSort.key, eSort.dir, eSort.nums); markSort(et, eSort);
+      et.querySelector('tbody').replaceChildren(...est.map((r) => {
+        const tr = mk('tr');
+        [[r.Plate], [r.Make], [r.Model, 'wrap'], [String(r.Localizacao || '').replace(' Aeroporto', '')], [r.MotivoNR], [r.NRTNo], [dFmt(r.NRTInicio)], [dFmt(r.NRTFimPrevisto)],
+          [nInt(r.DiasImobilizacao), 'num'], [r.NRTObs, 'fx-obs']].forEach(([v, c]) => tr.appendChild(tdOf(v, c)));
+        return tr;
+      }));
+      document.getElementById('ecnt').textContent = `${fInt(est.length)} viaturas`;
     }
 
     // Tabs
