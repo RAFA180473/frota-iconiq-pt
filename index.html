@@ -70,6 +70,11 @@
       const j2 = await r2.json();
       store.vendidas = { status: 'ok', data: j2.rows || j2 };
     } catch (e) { store.vendidas = { status: 'error', data: [], message: String(e) }; }
+    try {
+      const r3 = await fetch('data/manutencoes.json', { cache: 'no-store' });
+      const j3 = await r3.json();
+      store.manutencoes = { status: 'ok', data: j3.rows || j3 };
+    } catch (e) { store.manutencoes = { status: 'error', data: [], message: String(e) }; }
     compute(); run();
   }
   let w = 0; window.addEventListener('resize', () => { if (Math.abs(innerWidth - w) > 20) { w = innerWidth; run(); } });
@@ -287,6 +292,7 @@
     <button type="button" role="tab" id="tabbtn-fleet" data-tab="fleet" aria-selected="true">FLEET TO SELL</button>
     <button type="button" role="tab" id="tabbtn-frota" data-tab="frota" aria-selected="false">Frota ativa</button>
     <button type="button" role="tab" id="tabbtn-nrt" data-tab="nrt" aria-selected="false">NRT</button>
+    <button type="button" role="tab" id="tabbtn-manut" data-tab="manut" aria-selected="false">Manutenções</button>
     <button type="button" role="tab" id="tabbtn-vendidas" data-tab="vendidas" aria-selected="false">SALES</button>
   </nav>
 
@@ -474,6 +480,76 @@
 
   <div class="fx-page" id="vendidas" hidden>
     <div id="vend-root"></div>
+  </div>
+
+  <div class="fx-page" id="manutencoes" hidden>
+    <div class="fx-filt" id="mt-filtros" aria-label="Filtros das manutenções"></div>
+    <p class="fx-take dash-skeleton" id="mt-take" data-source="manutencoes">—</p>
+    <section class="fx-kpis" id="mt-kpis" aria-label="Indicadores de manutenção" data-source="manutencoes">
+      <div class="fx-kpi"><span class="lbl">Manutenções a tratar</span><span class="val dash-skeleton" data-k="n">—</span><span class="sub dash-skeleton" data-k="pct">—</span></div>
+      <div class="fx-kpi"><span class="lbl">Por efetuar (vencidas)</span><span class="val dash-skeleton" data-k="venc">—</span><span class="sub dash-skeleton" data-k="vencSub">—</span></div>
+      <div class="fx-kpi"><span class="lbl">Faltam até 2 500 km</span><span class="val dash-skeleton" data-k="prox">—</span><span class="sub">a planear já</span></div>
+      <div class="fx-kpi"><span class="lbl">Disponíveis agora</span><span class="val dash-skeleton" data-k="disp">—</span><span class="sub">podem seguir já para oficina</span></div>
+      <div class="fx-kpi"><span class="lbl">Regressam em 7 dias</span><span class="val dash-skeleton" data-k="ret7">—</span><span class="sub">alugadas com check-in previsto</span></div>
+      <div class="fx-kpi"><span class="lbl">Sem manutenção registada</span><span class="val dash-skeleton" data-k="semReg">—</span><span class="sub">WheelSys sem registo da última</span></div>
+    </section>
+    <p class="fx-hint">Fonte: Service Planner do WheelSys (viaturas ativas), atualizado todos os dias às 11h. Entram as viaturas com a manutenção vencida (km atuais acima da próxima manutenção) ou a 2 500 km ou menos dela. Quando o WheelSys não tem a última manutenção registada, a próxima fica nos 30 000 km do plano — confirme se a manutenção foi feita e registe-a no WheelSys.</p>
+
+    <div class="fx-grid">
+      <section class="fx-card" id="mt-faixa">
+        <h2>Km para a manutenção</h2>
+        <p class="fx-note">Viaturas por escalão de km em atraso ou em falta. Clique para filtrar.</p>
+        <div class="fx-chart" id="ch-mt-faixa" data-source="manutencoes"></div>
+      </section>
+      <section class="fx-card" id="mt-situacao">
+        <h2>Situação atual</h2>
+        <p class="fx-note">Onde estão hoje as viaturas a tratar.</p>
+        <div class="fx-chart" id="ch-mt-sit" data-source="manutencoes"></div>
+      </section>
+    </div>
+    <div class="fx-grid">
+      <section class="fx-card" id="mt-aeroporto">
+        <h2>Por aeroporto</h2>
+        <p class="fx-note">Clique para escolher o aeroporto.</p>
+        <div class="fx-chart" id="ch-mt-loc" data-source="manutencoes"></div>
+      </section>
+      <section class="fx-card" id="mt-modelo">
+        <h2>Por modelo</h2>
+        <p class="fx-note">Número de viaturas e km médios em atraso ou em falta.</p>
+        <div class="fx-chart" id="ch-mt-model" data-source="manutencoes"></div>
+      </section>
+    </div>
+
+    <section class="fx-card" id="quadro-manut">
+      <h2>Quadro de manutenções a tratar</h2>
+      <p class="fx-note">Ordenado pelos km em atraso. Km restantes negativos = manutenção já ultrapassada.</p>
+      <div class="fx-tools">
+        <input id="mq" type="search" placeholder="Procurar matrícula, marca, modelo…" aria-label="Procurar no quadro de manutenções">
+        <button type="button" class="fts-btn" id="mt-csv">Exportar CSV</button>
+        <span class="fx-count" id="mcnt"></span>
+      </div>
+      <div class="fx-scroll">
+        <table class="fx-table" id="tb-mt" data-source="manutencoes" data-row-key="Plate">
+          <thead><tr>
+            <th data-field="Plate"><button type="button">Matrícula</button></th>
+            <th data-field="Make"><button type="button">Marca</button></th>
+            <th data-field="Model"><button type="button">Modelo</button></th>
+            <th data-field="Localizacao"><button type="button">Localização</button></th>
+            <th data-field="Estado"><button type="button">Situação</button></th>
+            <th class="num" data-field="Km"><button type="button">Km atuais</button></th>
+            <th class="num" data-field="UltimaManutKm"><button type="button">Última manut. (km)</button></th>
+            <th class="num" data-field="ProximaManutKm"><button type="button">Próxima manut. (km)</button></th>
+            <th class="num" data-field="KmRestantes"><button type="button">Km restantes</button></th>
+            <th data-field="EstadoManut"><button type="button">Estado</button></th>
+            <th data-field="RegistoManut"><button type="button">Registo</button></th>
+            <th data-field="CheckInPrevisto"><button type="button">Check-in previsto</button></th>
+            <th data-field="ProximaInspecao"><button type="button">Próxima inspeção</button></th>
+            <th data-field="Ownership"><button type="button">Contrato</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
   <div class="fx-page" id="nrt" hidden>
@@ -1212,6 +1288,8 @@
       if (r.Mileage == null || r.Mileage === '' || isNaN(k)) return 'Sem km';
       return kmLabel(KMB.find(([a, b]) => k >= a && k < b) || KMB[KMB.length - 1]);
     };
+    const MT_BANDS = [['Atraso de mais de 20 000 km', -Infinity, -20000], ['Atraso de 10 000–20 000 km', -20000, -10000], ['Atraso de 5 000–10 000 km', -10000, -5000], ['Atraso até 5 000 km', -5000, 0], ['Faltam até 2 500 km', 0, Infinity]];
+    const faixaManut = (r) => { const k = Number(r.KmRestantes); if (r.KmRestantes == null || isNaN(k)) return null; return (MT_BANDS.find(([, a, b]) => (k > a && k <= b) || (b === 0 && k === 0)) || MT_BANDS[MT_BANDS.length - 1])[0]; };
     const CTL_ORDER = ['Prazo ultrapassado', 'Sem observações', 'Sem atualização há mais de 7 dias', 'Dentro do prazo'];
     const CTL_CLS = { 'Prazo ultrapassado': 'bad', 'Sem observações': 'warn', 'Sem atualização há mais de 7 dias': 'warn', 'Dentro do prazo': 'ok' };
     const DIMS = {
@@ -1219,6 +1297,10 @@
       MotivoNR: { l: 'Motivo NRT', get: (r) => r.Estado === 'Non Revenue' ? (r.MotivoNR || 'Sem motivo') : null },
       Faixa: { l: 'Dias imobilizada', get: faixaDias, order: [...DAYB.map((b) => b[0]), 'Sem data'] },
       Motivo: { l: 'Motivo', get: (r) => r.MotivoGrupo || r.MotivoNR || 'Sem motivo' },
+      EstadoManut: { l: 'Estado da manutenção', get: (r) => r.EstadoManut || null, order: ['Vencida', 'Faltam até 2 500 km'] },
+      RegistoManut: { l: 'Registo', get: (r) => r.RegistoManut || null },
+      FaixaManut: { l: 'Km para a manutenção', get: (r) => faixaManut(r), order: MT_BANDS.map((b) => b[0]) },
+      Model: { l: 'Modelo', get: (r) => r.Model || 'Sem modelo' },
       Controlo: { l: 'Controlo', get: (r) => r.NRTControlo || 'Sem informação', order: CTL_ORDER },
       Fornecedor: { l: 'Fornecedor', get: (r) => r.NRTFornecedor || 'Sem fornecedor' },
       Make: { l: 'Marca', get: (r) => r.Make || 'Sem marca' },
@@ -1642,9 +1724,93 @@
       document.getElementById('ecnt').textContent = `${fInt(est.length)} viaturas`;
     }
 
+    // ---------- Manutenções ----------
+    const MF = makeFilter(document.getElementById('mt-filtros'), ['EstadoManut', 'FaixaManut', 'Estado', 'RegistoManut', 'Make', 'Model', 'Ownership'], () => redraw());
+    const MT_C = ['#a8324a', '#d9614f', '#e0a537', '#f0c56a', '#3987e5'];
+    const mtt = document.getElementById('tb-mt');
+    const mSort = { key: 'KmRestantes', dir: 1, nums: ['Km', 'UltimaManutKm', 'ProximaManutKm', 'KmRestantes'] };
+    let mRowsShown = [];
+    document.getElementById('mq').addEventListener('input', () => drawManut());
+    sortable(mtt, mSort, () => drawManut());
+    const kmTxt = (v) => v == null ? '—' : `${fKm(Math.abs(v))} km`;
+    const mtTip = (d) => [[null, `${fInt(d.n)} viaturas`], [null, d.k2 != null ? `Média: ${d.k2 < 0 ? kmTxt(d.k2) + ' em atraso' : kmTxt(d.k2) + ' em falta'}` : '']];
+    const mtCount = (rows, get) => { const m = new Map(); rows.forEach((r) => { const k = get(r); if (k == null) return; const o = m.get(k) || { k, n: 0, s: 0 }; o.n++; o.s += Number(r.KmRestantes) || 0; m.set(k, o); }); return [...m.values()].map((o) => ({ ...o, k2: o.n ? o.s / o.n : null })); };
+    document.getElementById('mt-csv').addEventListener('click', () => {
+      const cols = [...mtt.querySelectorAll('th')].map((th) => [th.dataset.field, th.textContent.trim()]);
+      const esc = (v) => { const s = v == null ? '' : String(v); return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+      const lines = [cols.map((c) => c[1]).join(';'), ...mRowsShown.map((r) => cols.map(([k]) => esc(r[k])).join(';'))];
+      const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'manutencoes_a_tratar.csv'; document.body.append(a); a.click(); a.remove();
+    });
+    function drawManut() {
+      const m = dash.data('manutencoes');
+      const ok = m.status === 'ok';
+      MF.set(ok ? m.data : []);
+      MF.render();
+      const CH = ['ch-mt-faixa', 'ch-mt-sit', 'ch-mt-loc', 'ch-mt-model'].map((id) => document.getElementById(id));
+      const take = document.getElementById('mt-take');
+      if (!ok) {
+        setKpis(document.getElementById('mt-kpis'), null, m.status);
+        take.textContent = '—'; take.classList.toggle('dash-skeleton', m.status === 'loading');
+        CH.forEach((b) => failOrWait(b, m.status));
+        mtt.querySelector('tbody').replaceChildren(); mRowsShown = [];
+        document.getElementById('mcnt').textContent = m.status === 'error' ? 'Failed to load' : '';
+        return;
+      }
+      const loc = curLocOrNull();
+      const rows = MF.filtered();
+      const f = dash.data('frota');
+      const frotaN = f.status === 'ok' ? f.data.filter((r) => !loc || r.Localizacao === loc).length : 0;
+      const venc = rows.filter((r) => r.EstadoManut === 'Vencida');
+      const prox = rows.length - venc.length;
+      const now = new Date(); const in7 = new Date(now.getTime() + 7 * 864e5);
+      const ret7 = rows.filter((r) => r.Estado === 'Alugada' && r.CheckInPrevisto && new Date(r.CheckInPrevisto) <= in7).length;
+      const disp = rows.filter((r) => r.Estado === 'Disponível').length;
+      const semReg = rows.filter((r) => r.RegistoManut !== 'Com registo').length;
+      const atrMed = venc.length ? d3.mean(venc, (r) => Number(r.KmAtraso) || 0) : null;
+      setKpis(document.getElementById('mt-kpis'), {
+        n: fInt(rows.length), pct: frotaN ? `${fPct(rows.length / frotaN)} da frota${loc ? ' em ' + loc.replace(' Aeroporto', '') : ''}` : null,
+        venc: fInt(venc.length), vencSub: venc.length ? `atraso médio de ${kmTxt(atrMed)}` : 'km acima da próxima manutenção',
+        prox: fInt(prox), disp: fInt(disp), ret7: fInt(ret7), semReg: fInt(semReg),
+      }, 'ok');
+      take.classList.remove('dash-skeleton');
+      const worst = rows.slice().sort((a, b) => Number(a.KmRestantes) - Number(b.KmRestantes))[0];
+      take.textContent = rows.length
+        ? `${fInt(rows.length)} viaturas com manutenção a tratar${MF.active() ? ' com os filtros escolhidos' : ''}: ${fInt(venc.length)} já ultrapassaram a próxima manutenção e ${fInt(prox)} estão a 2 500 km ou menos. ${fInt(disp)} estão disponíveis e podem seguir já para oficina; ${fInt(ret7)} alugadas regressam nos próximos 7 dias. ${semReg ? `${fInt(semReg)} não têm a última manutenção registada no WheelSys.` : ''}${worst ? ` Maior atraso: ${worst.Plate} (${worst.Make} ${worst.Model}), ${kmTxt(worst.KmRestantes)} ${Number(worst.KmRestantes) < 0 ? 'acima' : 'antes'} da próxima manutenção.` : ''}`
+        : 'Nenhuma viatura com manutenção a tratar com estes filtros.';
+      const bo = DIMS.FaixaManut.order;
+      const fa = mtCount(MF.filtered('FaixaManut'), faixaManut).sort((a, b) => bo.indexOf(a.k) - bo.indexOf(b.k));
+      chart(CH[0], fa, { max: d3.max(fa, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: MT_C[bo.indexOf(d.k)] }], tipHead: (d) => d.k, tipLines: mtTip, onClick: (d) => MF.toggle('FaixaManut', d.k), isSel: (d) => MF.st.FaixaManut.has(d.k) });
+      const si = mtCount(MF.filtered('Estado'), (r) => r.Estado || 'Sem informação').sort((a, b) => b.n - a.n);
+      chart(CH[1], si, { max: d3.max(si, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: ESTADOS.includes(d.k) ? colOf(d.k) : 'var(--cds-chart-muted)' }], tipHead: (d) => d.k, tipLines: mtTip, onClick: (d) => MF.toggle('Estado', d.k), isSel: (d) => MF.st.Estado.has(d.k) });
+      const rl = MF.filtered('loc');
+      const la = LOCS.map((l) => ({ ...(mtCount(rl.filter((r) => r.Localizacao === l), () => l)[0] || { n: 0, k2: null }), k: l }));
+      chart(CH[2], la.some((d) => d.n) ? la : [], { max: d3.max(la, (d) => d.n), label: (d) => d.k.replace(' Aeroporto', ''), segs: (d) => [{ v: d.n, c: '#d9614f' }], tipHead: (d) => d.k, tipLines: mtTip, onClick: (d) => dash.setParams({ loc: loc === d.k ? null : d.k }), isSel: (d) => loc === d.k });
+      const mo = mtCount(MF.filtered('Model'), (r) => r.Model || 'Sem modelo').sort((a, b) => b.n - a.n).slice(0, 15);
+      chart(CH[3], mo, { max: d3.max(mo, (d) => d.n), label: (d) => d.k, segs: (d) => [{ v: d.n, c: '#e0a537' }], valText: (d) => `${fInt(d.n)} · Ø ${d.k2 < 0 ? '−' : ''}${kmTxt(d.k2)}`, tipHead: (d) => d.k, tipLines: mtTip, onClick: (d) => MF.toggle('Model', d.k), isSel: (d) => MF.st.Model.has(d.k) });
+      const q = document.getElementById('mq').value.trim().toLowerCase();
+      const tr0 = q ? rows.filter((r) => [r.Plate, r.Make, r.Model, r.Localizacao, r.Estado, r.Ownership].join(' ').toLowerCase().includes(q)) : rows.slice();
+      sortRows(tr0, mSort.key, mSort.dir, mSort.nums); markSort(mtt, mSort);
+      mRowsShown = tr0;
+      mtt.querySelector('tbody').replaceChildren(...tr0.map((r) => {
+        const v = r.EstadoManut === 'Vencida';
+        const tr = mk('tr', v ? 'fx-late' : null);
+        [[r.Plate], [r.Make], [r.Model, 'wrap'], [String(r.Localizacao || '').replace(' Aeroporto', '')], [r.Estado === 'Non Revenue' && r.MotivoNR ? `NRT · ${r.MotivoNR}` : r.Estado],
+          [r.Km == null ? '' : fKm(r.Km), 'num'], [r.UltimaManutKm ? fKm(r.UltimaManutKm) : '', 'num'], [r.ProximaManutKm == null ? '' : fKm(r.ProximaManutKm), 'num']].forEach(([x, c]) => tr.appendChild(tdOf(x, c)));
+        const tdR = tdOf(r.KmRestantes == null ? '' : `${Number(r.KmRestantes) < 0 ? '−' : ''}${fKm(Math.abs(Number(r.KmRestantes)))}`, 'num'); if (v) tdR.classList.add('fx-late-t'); tr.appendChild(tdR);
+        const tdE = mk('td'); tdE.appendChild(mk('span', `fx-ctl ${v ? 'bad' : 'warn'}`, r.EstadoManut || '')); tr.appendChild(tdE);
+        tr.appendChild(r.RegistoManut === 'Com registo' ? tdOf(r.RegistoManut) : (() => { const td = mk('td'); td.appendChild(mk('span', 'fx-miss', r.RegistoManut || '')); return td; })());
+        tr.appendChild(tdOf(r.CheckInPrevisto ? `${dFmt(r.CheckInPrevisto)} ${String(r.CheckInPrevisto).slice(11, 16)}` : ''));
+        tr.appendChild(tdOf(dFmt(r.ProximaInspecao)));
+        tr.appendChild(tdOf(r.Ownership));
+        return tr;
+      }));
+      document.getElementById('mcnt').textContent = `${fInt(tr0.length)} viaturas`;
+    }
+
     // Tabs
     let tab = 'fleet';
-    const PAGES = { fleet: 'fleet-to-sell', vender: 'por-vender', frota: 'frota-ativa', nrt: 'nrt', vendidas: 'vendidas' };
+    const PAGES = { fleet: 'fleet-to-sell', vender: 'por-vender', frota: 'frota-ativa', nrt: 'nrt', manut: 'manutencoes', vendidas: 'vendidas' };
     const showTab = (t, link) => {
       tab = t;
       document.querySelectorAll('.fx-tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
@@ -1867,6 +2033,7 @@
       }
       if (tab === 'vender') { drawVender(); return; }
       if (tab === 'nrt') { drawNrt(); return; }
+      if (tab === 'manut') { drawManut(); return; }
       if (tab === 'vendidas') {
         const v = dash.data('vendidas');
         if (v.status === 'ok' && v.data !== vendData) { vendData = v.data; vend.setRows(v.data); }
@@ -1874,7 +2041,7 @@
       }
       drawFrota();
     };
-    if (location.hash === '#frota-ativa') showTab('frota', false); else if (location.hash === '#nrt') showTab('nrt', false); else if (location.hash === '#vendidas') showTab('vendidas', false); else redraw();
+    if (location.hash === '#frota-ativa') showTab('frota', false); else if (location.hash === '#nrt') showTab('nrt', false); else if (location.hash === '#manutencoes') showTab('manut', false); else if (location.hash === '#vendidas') showTab('vendidas', false); else redraw();
   })();
 </script>
 
