@@ -75,6 +75,11 @@
       const j3 = await r3.json();
       store.manutencoes = { status: 'ok', data: j3.rows || j3 };
     } catch (e) { store.manutencoes = { status: 'error', data: [], message: String(e) }; }
+    try {
+      const r4 = await fetch('data/processo_venda.json', { cache: 'no-store' });
+      const j4 = await r4.json();
+      store.processo_venda = { status: 'ok', data: j4.rows || j4 };
+    } catch (e) { store.processo_venda = { status: 'error', data: [], message: String(e) }; }
     compute(); run();
   }
   let w = 0; window.addEventListener('resize', () => { if (Math.abs(innerWidth - w) > 20) { w = innerWidth; run(); } });
@@ -294,6 +299,7 @@
     <button type="button" role="tab" id="tabbtn-nrt" data-tab="nrt" aria-selected="false">NRT</button>
     <button type="button" role="tab" id="tabbtn-manut" data-tab="manut" aria-selected="false">Manutenções</button>
     <button type="button" role="tab" id="tabbtn-vendidas" data-tab="vendidas" aria-selected="false">SALES</button>
+    <button type="button" role="tab" id="tabbtn-processo" data-tab="processo" aria-selected="false">Processo de venda</button>
   </nav>
 
   <div class="fx-page" id="fleet-to-sell">
@@ -545,6 +551,59 @@
             <th data-field="CheckInPrevisto"><button type="button">Check-in previsto</button></th>
             <th data-field="ProximaInspecao"><button type="button">Próxima inspeção</button></th>
             <th data-field="Ownership"><button type="button">Contrato</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div class="fx-page" id="processo-venda" hidden>
+    <style>
+      .pv-flow { display: grid; grid-template-columns: repeat(10, minmax(8.5rem, 1fr)); min-width: 88rem; }
+      .pv-wrap { overflow-x: auto; }
+      .pv-step { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: var(--cds-pad-sm); border-top: 3px solid var(--color-border-line); }
+      .pv-step:hover, .pv-step:focus-visible { background: var(--color-panel); }
+      .pv-step:focus-visible { outline: 2px solid var(--color-fg); }
+      .pv-step.on { border-top-color: #00f2d7; }
+      .pv-step.sel { background: rgba(0,242,215,.10); }
+      .pv-step .n { font-family: var(--font-anthropic-serif); font-size: 1.4rem; line-height: 1; }
+      .pv-step .t { font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-caption); }
+      .pv-step .o { font-size: .72rem; color: var(--color-fg-muted); }
+      .pv-step .c { font-variant-numeric: tabular-nums; font-size: var(--cds-font-size-caption); margin-top: 4px; }
+      .pv-dots { display: inline-grid; grid-template-columns: repeat(10, 8px); gap: 2px; vertical-align: middle; }
+      .pv-dots i { height: 8px; border-radius: 2px; background: var(--color-border-line); }
+      .pv-dots i.d { background: #00b8a3; }
+      .pv-dots i.c { background: var(--color-warn); }
+      .pv-link { display: inline-block; font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
+    </style>
+    <p class="fx-hint">Processo de venda (draft): da comunicação da venda ao registo em nome do cliente. As etapas são marcadas pela equipa na página de gestão do processo; este separador mostra a situação de cada viatura, atualizada todos os dias às 11h. <a class="pv-link" href="https://claude.ai/artifact/AuU9X32atdpPULGmZwwMCg" target="_blank" rel="noopener">Abrir a gestão do processo de venda ↗</a></p>
+    <p class="fx-take dash-skeleton" id="pv-take" data-source="processo_venda">—</p>
+    <section class="fx-kpis" id="pv-kpis" aria-label="Indicadores do processo de venda" data-source="processo_venda">
+      <div class="fx-kpi"><span class="lbl">Viaturas em processo</span><span class="val dash-skeleton" data-k="act">—</span><span class="sub" data-k="actSub">vendidas e ainda sem registo final</span></div>
+      <div class="fx-kpi"><span class="lbl">Paradas há 15 dias ou mais</span><span class="val dash-skeleton" data-k="stop">—</span><span class="sub">desde a última etapa concluída</span></div>
+      <div class="fx-kpi"><span class="lbl">À espera de documentos</span><span class="val dash-skeleton" data-k="docs">—</span><span class="sub">MUAs ou DUA (etapas 6 e 9)</span></div>
+      <div class="fx-kpi"><span class="lbl">Processos concluídos</span><span class="val dash-skeleton" data-k="conc">—</span><span class="sub">registo final feito</span></div>
+    </section>
+    <section class="fx-card" id="pv-fluxo">
+      <h2>Fluxo do processo</h2>
+      <p class="fx-note">Viaturas em cada etapa. Clique numa etapa para filtrar o quadro. Exceção: no registo direto em nome da AVEX ou do cliente, as etapas 8 e 9 não se aplicam.</p>
+      <div class="pv-wrap"><div class="pv-flow" id="pv-flow" data-source="processo_venda"></div></div>
+    </section>
+    <section class="fx-card" id="quadro-processo">
+      <h2>Viaturas em processo de venda</h2>
+      <p class="fx-note" id="pv-filt">Ordenado pelos dias parada (desde a última etapa concluída).</p>
+      <div class="fx-tablewrap" style="overflow-x:auto">
+        <table class="fx-table" id="tb-pvenda" data-source="processo_venda" data-row-key="Plate">
+          <thead><tr>
+            <th data-field="Plate"><button type="button">Matrícula</button></th>
+            <th data-field="Cliente"><button type="button">Cliente</button></th>
+            <th data-field="Modelo"><button type="button">Modelo</button></th>
+            <th data-field="DataVenda"><button type="button">Venda</button></th>
+            <th data-field="EtapasConcluidas"><button type="button">Progresso</button></th>
+            <th data-field="EtapaNome"><button type="button">Etapa atual</button></th>
+            <th class="num" data-field="DiasParada"><button type="button">Dias parada</button></th>
+            <th data-field="Via"><button type="button">Via de registo</button></th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -1810,12 +1869,12 @@
 
     // Tabs
     let tab = 'fleet';
-    const PAGES = { fleet: 'fleet-to-sell', vender: 'por-vender', frota: 'frota-ativa', nrt: 'nrt', manut: 'manutencoes', vendidas: 'vendidas' };
+    const PAGES = { fleet: 'fleet-to-sell', vender: 'por-vender', frota: 'frota-ativa', nrt: 'nrt', manut: 'manutencoes', vendidas: 'vendidas', processo: 'processo-venda' };
     const showTab = (t, link) => {
       tab = t;
       document.querySelectorAll('.fx-tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
       Object.entries(PAGES).forEach(([k, id]) => { document.getElementById(id).hidden = k !== t; });
-      seg.hidden = t === 'fleet' || t === 'vendidas';
+      seg.hidden = t === 'fleet' || t === 'vendidas' || t === 'processo';
       if (link) dash.setLink(PAGES[t]);
       redraw();
     };
@@ -2020,6 +2079,51 @@
       drawPvTable();
     }
 
+    // ---------- Processo de venda ----------
+    const PV_STEPS = [['Comunicação da venda','Comercial → Sofia'],['Data de bloqueio e localização','Sofia com Joana/Marisa'],['Fatura proforma','Renato'],['Pagamento e entrega','Cliente · Frota'],['Antecipação ao banco','Financeiro'],['Pagamento ao banco e MUAs','Financeiro · Banco'],['Reconhecimento de assinaturas','Administrativo'],['1.º registo na Conservatória','Administrativo'],['DUA em nome da Iconiq','Conservatória'],['Registo final no cliente','Administrativo']];
+    let pvSel = null;
+    function drawProcesso() {
+      const d = dash.data('processo_venda');
+      const ok = d.status === 'ok';
+      const rows = ok ? d.data : [];
+      const act = rows.filter((r) => !r.Concluido);
+      const k = (key, v) => { const el = document.querySelector(`#pv-kpis [data-k="${key}"]`); if (el) { el.textContent = v; el.classList.toggle('dash-skeleton', !ok); } };
+      k('act', ok ? String(act.length) : '—');
+      k('stop', ok ? String(act.filter((r) => Number(r.DiasParada) >= 15).length) : '—');
+      k('docs', ok ? String(act.filter((r) => [6, 9].includes(Number(r.EtapaAtual))).length) : '—');
+      k('conc', ok ? String(rows.length - act.length) : '—');
+      const take = document.getElementById('pv-take');
+      take.classList.toggle('dash-skeleton', !ok);
+      if (ok) {
+        const counts = Array(11).fill(0); act.forEach((r) => { counts[Number(r.EtapaAtual)]++; });
+        const top = counts.reduce((b, n, i) => (n > counts[b] ? i : b), 1);
+        take.textContent = act.length ? `${act.length} viaturas vendidas ainda sem registo final; a etapa com mais viaturas é a ${top} (${PV_STEPS[top - 1][0].toLowerCase()}), com ${counts[top]}.` : 'Nenhuma viatura em processo de venda.';
+      } else take.textContent = '—';
+      const flow = document.getElementById('pv-flow'); flow.replaceChildren();
+      PV_STEPS.forEach(([t, o], i) => {
+        const n = i + 1, c = act.filter((r) => Number(r.EtapaAtual) === n).length;
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'pv-step' + (c ? ' on' : '') + (pvSel === n ? ' sel' : ''); b.id = 'pv-etapa-' + n;
+        b.append(mk('span', 'n', String(n)), mk('span', 't', t), mk('span', 'o', o), mk('span', 'c', ok ? `${c} ${c === 1 ? 'viatura' : 'viaturas'}` : '—'));
+        b.addEventListener('click', () => { pvSel = pvSel === n ? null : n; drawProcesso(); });
+        flow.appendChild(b);
+      });
+      document.getElementById('pv-filt').textContent = pvSel ? `Só a etapa ${pvSel} (${PV_STEPS[pvSel - 1][0]}). Clique de novo na etapa para ver todas.` : 'Ordenado pelos dias parada (desde a última etapa concluída).';
+      const tb = document.querySelector('#tb-pvenda tbody'); tb.replaceChildren();
+      const list = (pvSel ? act.filter((r) => Number(r.EtapaAtual) === pvSel) : rows).slice().sort((a, b) => (a.Concluido - b.Concluido) || ((Number(b.DiasParada) || -1) - (Number(a.DiasParada) || -1)));
+      list.forEach((r) => {
+        const tr = document.createElement('tr'); tr.dataset.key = r.Plate;
+        [r.Plate, r.Cliente || '', r.Modelo || '', r.DataVenda ? r.DataVenda.split('-').reverse().join('/') : ''].forEach((x) => tr.appendChild(tdOf(x)));
+        const tdP = document.createElement('td'); const dots = mk('span', 'pv-dots');
+        for (let i = 1; i <= 10; i++) { const v = r['E' + i]; dots.appendChild(mk('i', v && v !== 'N/A' ? 'd' : (Number(r.EtapaAtual) === i ? 'c' : ''))); }
+        tdP.appendChild(dots); tdP.title = `${r.EtapasConcluidas} de 10 etapas concluídas ou não aplicáveis`; tr.appendChild(tdP);
+        tr.appendChild(tdOf(r.EtapaNome || ''));
+        const dp = r.DiasParada == null ? '' : String(r.DiasParada);
+        const tdD = document.createElement('td'); tdD.className = 'num';
+        if (dp) tdD.appendChild(mk('span', `fx-ctl ${Number(dp) >= 15 ? 'bad' : Number(dp) >= 7 ? 'warn' : 'ok'}`, dp)); tr.appendChild(tdD);
+        tr.appendChild(tdOf(r.Via || ''));
+        tb.appendChild(tr);
+      });
+    }
     let redraw = () => {};
     dash.onData(() => redraw());
 
@@ -2034,6 +2138,7 @@
       if (tab === 'vender') { drawVender(); return; }
       if (tab === 'nrt') { drawNrt(); return; }
       if (tab === 'manut') { drawManut(); return; }
+      if (tab === 'processo') { drawProcesso(); return; }
       if (tab === 'vendidas') {
         const v = dash.data('vendidas');
         if (v.status === 'ok' && v.data !== vendData) { vendData = v.data; vend.setRows(v.data); }
@@ -2041,7 +2146,7 @@
       }
       drawFrota();
     };
-    if (location.hash === '#frota-ativa') showTab('frota', false); else if (location.hash === '#nrt') showTab('nrt', false); else if (location.hash === '#manutencoes') showTab('manut', false); else if (location.hash === '#vendidas') showTab('vendidas', false); else redraw();
+    if (location.hash === '#frota-ativa') showTab('frota', false); else if (location.hash === '#nrt') showTab('nrt', false); else if (location.hash === '#manutencoes') showTab('manut', false); else if (location.hash === '#vendidas') showTab('vendidas', false); else if (location.hash === '#processo-venda') showTab('processo', false); else redraw();
   })();
 </script>
 
