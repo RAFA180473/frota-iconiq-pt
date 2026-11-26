@@ -12,3 +12,10 @@ Dashboard da frota ativa ICONIQ PT (Auto Union), alojado no GitHub Pages.
 Atualização: tarefa agendada diária às 11h (Lisboa) — lê o WheelSys, corre o merge e publica aqui.
 
 Atenção: repositório público — matrículas, VIN e valores da frota ficam visíveis na internet.
+
+## Controlo de Frota (pasta `controlo/`)
+
+Versão pública do dashboard de controlo Targa, Fidelidade e WheelSys: https://rafa180473.github.io/frota-iconiq-pt/controlo/
+
+- `controlo/index.html` — a página (abre `controlo/data.json`).
+- `controlo/data.json` — dados sem nomes de clientes, números de contrato, posições GPS nem sinistros.
